@@ -1,10 +1,10 @@
-from objects import glob
-from helpers import scoreHelper
-from common.ripple import passwordUtils
 import time
-from common.log import logUtils as log
+
 from common.constants import gameModes
 from common.constants import privileges
+from common.log import logUtils as log
+from common.ripple import passwordUtils, scoreUtils
+from objects import glob
 
 
 def getUserStats(userID, gameMode):
@@ -14,7 +14,7 @@ def getUserStats(userID, gameMode):
 	userID --
 	gameMode -- gameMode number
 	"""
-	modeForDB = scoreHelper.readableGameMode(gameMode)
+	modeForDB = scoreUtils.readableGameMode(gameMode)
 	return glob.db.fetch(
 		"SELECT ranked_score_{mode} as rankedScore, total_score_{mode} as totalScore, pp_{mode} AS pp, avg_accuracy_{mode} AS accuracy, playcount_{mode} AS playcount FROM users_stats WHERE id = %s LIMIT 1".format(
 			mode=modeForDB), [userID])
@@ -160,7 +160,7 @@ def updateLevel(userID, gameMode=0, totalScore=0):
 
 	# Get total score from db if not passed
 	if totalScore == 0:
-		mode = scoreHelper.readableGameMode(gameMode)
+		mode = scoreUtils.readableGameMode(gameMode)
 		totalScore = glob.db.fetch(
 			"SELECT total_score_{m} as total_score FROM users_stats WHERE id = %s LIMIT 1".format(m=mode), [userID])
 		if totalScore:
@@ -244,7 +244,7 @@ def updateAccuracy(userID, gameMode):
 	gameMode -- gameMode number
 	"""
 	newAcc = calculateAccuracy(userID, gameMode)
-	mode = scoreHelper.readableGameMode(gameMode)
+	mode = scoreUtils.readableGameMode(gameMode)
 	glob.db.execute("UPDATE users_stats SET avg_accuracy_{m} = %s WHERE id = %s LIMIT 1".format(m=mode),
 					[newAcc, userID])
 
@@ -263,7 +263,7 @@ def updatePP(userID, gameMode):
 
 	# Get new total PP and update db
 	newPP = calculatePP(userID, gameMode)
-	mode = scoreHelper.readableGameMode(gameMode)
+	mode = scoreUtils.readableGameMode(gameMode)
 	glob.db.execute("UPDATE users_stats SET pp_{}=%s WHERE id = %s LIMIT 1".format(mode), [newPP, userID])
 
 
@@ -282,7 +282,7 @@ def updateStats(userID, __score):
 		return
 
 	# Get gamemode for db
-	mode = scoreHelper.readableGameMode(__score.gameMode)
+	mode = scoreUtils.readableGameMode(__score.gameMode)
 
 	# Update total score and playcount
 	glob.db.execute(
@@ -324,7 +324,7 @@ def getRankedScore(userID, gameMode):
 	return -- ranked score
 	"""
 
-	mode = scoreHelper.readableGameMode(gameMode)
+	mode = scoreUtils.readableGameMode(gameMode)
 	result = glob.db.fetch("SELECT ranked_score_{} FROM users_stats WHERE id = %s LIMIT 1".format(mode), [userID])
 	if result != None:
 		return result["ranked_score_{}".format(mode)]
@@ -341,7 +341,7 @@ def getPP(userID, gameMode):
 	return -- PP
 	"""
 
-	mode = scoreHelper.readableGameMode(gameMode)
+	mode = scoreUtils.readableGameMode(gameMode)
 	result = glob.db.fetch("SELECT pp_{} FROM users_stats WHERE id = %s LIMIT 1".format(mode), [userID])
 	if result != None:
 		return result["pp_{}".format(mode)]
@@ -356,7 +356,7 @@ def incrementReplaysWatched(userID, gameMode):
 	userID -- user ID
 	gameMode -- int value, see gameModes
 	"""
-	mode = scoreHelper.readableGameMode(gameMode)
+	mode = scoreUtils.readableGameMode(gameMode)
 	glob.db.execute(
 		"UPDATE users_stats SET replays_watched_{mode}=replays_watched_{mode}+1 WHERE id = %s LIMIT 1".format(
 			mode=mode), [userID])
