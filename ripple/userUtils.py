@@ -7,17 +7,35 @@ from common.ripple import passwordUtils, scoreUtils
 from objects import glob
 
 
+
 def getUserStats(userID, gameMode):
 	"""
-	Get stats needed in ranking panel relative to userID for gameMdoe
+	Get all user stats relative to gameMode with only two queries
 
 	userID --
 	gameMode -- gameMode number
+	return -- dictionary with results
 	"""
-	modeForDB = scoreUtils.readableGameMode(gameMode)
-	return glob.db.fetch(
-		"SELECT ranked_score_{mode} as rankedScore, total_score_{mode} as totalScore, pp_{mode} AS pp, avg_accuracy_{mode} AS accuracy, playcount_{mode} AS playcount FROM users_stats WHERE id = %s LIMIT 1".format(
-			mode=modeForDB), [userID])
+	modeForDB = gameModes.getGameModeForDB(gameMode)
+
+	# Get stats
+	stats = glob.db.fetch("""SELECT
+						ranked_score_{gm} AS rankedScore,
+						avg_accuracy_{gm} AS accuracy,
+						playcount_{gm} AS playcount,
+						total_score_{gm} AS totalScore,
+						pp_{gm} AS pp
+						FROM users_stats WHERE id = %s LIMIT 1""".format(gm=modeForDB), [userID])
+
+	# Get game rank
+	result = glob.db.fetch("SELECT position FROM leaderboard_{} WHERE user = %s LIMIT 1".format(modeForDB), [userID])
+	if result is None:
+		stats["gameRank"] = 0
+	else:
+		stats["gameRank"] = result["position"]
+
+	# Return stats + game rank
+	return stats
 
 
 def cacheUserIDs():
