@@ -15,7 +15,7 @@ def stringToBool(s):
 	s -- string/int value
 	return -- True/False
 	"""
-	return (s == "True" or s== "true" or s == "1" or s == 1)
+	return s == "True" or s == "true" or s == "1" or s == 1
 
 def fileMd5(filename):
 	"""
@@ -80,13 +80,13 @@ def getRank(gameMode, __mods, acc, c300, c100, c50, cmiss):
 		# CtB
 		if acc == 100:
 			return ss()
-		if acc >= 98.01 and acc <= 99.99:
+		if 98.01 <= acc <= 99.99:
 			return s()
-		if acc >= 94.01 and acc <= 98.00:
+		if 94.01 <= acc <= 98.00:
 			return "A"
-		if acc >= 90.01 and acc <= 94.00:
+		if 90.01 <= acc <= 94.00:
 			return "B"
-		if acc >= 98.01 and acc <= 90.00:
+		if 98.01 <= acc <= 90.00:
 			return "C"
 		return "D"
 	elif gameMode == 3:

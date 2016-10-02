@@ -47,11 +47,11 @@ def logMessage(message, alertType = "INFO", messageColor = bcolors.ENDC, discord
 		endc=bcolors.ENDC)
 
 	# Log to console
-	if stdout == True:
+	if stdout:
 		print(finalMessageConsole)
 
 	# Log to discord if needed
-	if discord != None:
+	if discord is not None:
 		if discord == "bunker":
 			glob.schiavo.sendConfidential(message, alertDev)
 		elif discord == "cm":
@@ -101,7 +101,7 @@ def debug(message):
 
 	message -- debug message
 	"""
-	if glob.debug == True:
+	if glob.debug:
 		logMessage(message, "DEBUG", bcolors.PINK, of="debug.txt")
 
 def chat(message):
@@ -130,6 +130,5 @@ def rap(userID, message, discord=False, through="FokaBot"):
 	through -- "through" thing string. Optional. Default: "FokaBot"
 	"""
 	glob.db.execute("INSERT INTO rap_logs (id, userid, text, datetime, through) VALUES (NULL, %s, %s, %s, %s)", [userID, message, int(time.time()), through])
-	if discord == True:
-		username = userUtils.getUsername(userID)
-		logMessage("{} {}".format(username, message), discord=True)
+	username = userUtils.getUsername(userID)
+	logMessage("{} {}".format(username, message), discord=True)

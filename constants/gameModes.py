@@ -20,7 +20,6 @@ def getGameModeForDB(gameMode):
 	else:
 		return "mania"
 
-
 def getGamemodeFull(gameMode):
 	if gameMode == STD:
 		return "osu!"
@@ -28,5 +27,21 @@ def getGamemodeFull(gameMode):
 		return "Taiko"
 	elif gameMode == CTB:
 		return "Catch The Beat"
+	else:
+		return "osu!mania"
+
+def getGameModeForPrinting(gameMode):
+	"""
+	Convert a gamemode number to string for showing to a user (e.g. !last)
+
+	gameMode -- gameMode int or variable (ex: gameMode.std)
+	return -- game mode readable string for a human
+	"""
+	if gameMode == STD:
+		return "osu!"
+	elif gameMode == TAIKO:
+		return "Taiko"
+	elif gameMode == CTB:
+		return "CatchTheBeat"
 	else:
 		return "osu!mania"

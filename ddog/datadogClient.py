@@ -1,6 +1,6 @@
 import datadog
 
-class datadogClient():
+class datadogClient:
 	def __init__(self, apiKey=None, appKey=None):
 		"""
 		Initialize a toggleable Datadog Client

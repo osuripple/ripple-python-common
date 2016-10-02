@@ -1,6 +1,6 @@
 from objects import glob
 
-class buffer():
+class buffer:
 	"""
 	A file buffer object.
 	This buffer caches data in memory and when it's full, it writes the content to a file.
@@ -49,7 +49,7 @@ class buffer():
 		self.content = ""
 		self.length = 0
 
-class buffersList():
+class buffersList:
 	"""
 	A list of buffers
 	"""
