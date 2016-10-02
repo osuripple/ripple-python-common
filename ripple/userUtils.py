@@ -177,8 +177,8 @@ def updateLevel(userID, gameMode=0, totalScore=0):
 	#	return
 
 	# Get total score from db if not passed
+	mode = scoreUtils.readableGameMode(gameMode)
 	if totalScore == 0:
-		mode = scoreUtils.readableGameMode(gameMode)
 		totalScore = glob.db.fetch(
 			"SELECT total_score_{m} as total_score FROM users_stats WHERE id = %s LIMIT 1".format(m=mode), [userID])
 		if totalScore:
