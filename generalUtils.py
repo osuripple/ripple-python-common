@@ -134,21 +134,21 @@ def readableMods(__mods):
 	r = ""
 	if __mods == 0:
 		return r
-	if __mods & mods.NoFail > 0:
+	if __mods & mods.NOFAIL > 0:
 		r += "NF"
-	if __mods & mods.Easy > 0:
+	if __mods & mods.EASY > 0:
 		r += "EZ"
-	if __mods & mods.Hidden > 0:
+	if __mods & mods.HIDDEN > 0:
 		r += "HD"
-	if __mods & mods.HardRock > 0:
+	if __mods & mods.HARDROCK > 0:
 		r += "HR"
-	if __mods & mods.DoubleTime > 0:
+	if __mods & mods.DOUBLETIME > 0:
 		r += "DT"
-	if __mods & mods.HalfTime > 0:
+	if __mods & mods.HALFTIME > 0:
 		r += "HT"
-	if __mods & mods.Flashlight > 0:
+	if __mods & mods.FLASHLIGHT > 0:
 		r += "FL"
-	if __mods & mods.SpunOut > 0:
+	if __mods & mods.SPUNOUT > 0:
 		r += "SO"
 
 	return r
