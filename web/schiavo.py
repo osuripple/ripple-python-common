@@ -1,7 +1,7 @@
 import requests
 from urllib.parse import urlencode
 
-class schiavo():
+class schiavo:
 	"""
 	Schiavo Bot class
 	"""

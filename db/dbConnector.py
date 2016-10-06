@@ -4,7 +4,7 @@ import time
 from objects import glob
 from common.log import logUtils as log
 
-class worker():
+class worker:
 	"""
 	A single MySQL worker
 	"""
@@ -40,7 +40,7 @@ class worker():
 		self.connection.close()
 		log.debug("Destroyed MySQL worker.")
 
-class connectionsPool():
+class connectionsPool:
 	"""
 	A MySQL workers pool
 	"""
@@ -52,8 +52,7 @@ class connectionsPool():
 		:param username: MySQL username
 		:param password: MySQL password
 		:param database: MySQL database name
-		:param initialSize: initial pool size
-		:param maxSize: maximum pool size, to avoid `Too many connections` errors
+		:param size: pool max size
 		"""
 		self.config = (host, username, password, database)
 		self.maxSize = size
@@ -95,7 +94,7 @@ class connectionsPool():
 		Get a MySQL connection worker from the pool.
 		If the pool is empty, a new temporary worker is created.
 
-		:param retries: number of failed connection attempts. If > 50, return None
+		:param level: number of failed connection attempts. If > 50, return None
 		:return: instance of worker class
 		"""
 		# Make sure we below 50 retries
@@ -197,13 +196,13 @@ class db:
 			if worker is not None:
 				self.pool.putWorker(worker)
 
-	def fetch(self, query, params = (), all = False):
+	def fetch(self, query, params = (), _all = False):
 		"""
 		Fetch a single value from db that matches given query
 
 		:param query: query to execute. You can bind parameters with %s
 		:param params: parameters list. First element replaces first %s and so on
-		:param all: fetch one or all values. Used internally. Use fetchAll if you want to fetch all values
+		:param _all: fetch one or all values. Used internally. Use fetchAll if you want to fetch all values
 		"""
 		cursor = None
 		worker = self.pool.getWorker()
@@ -214,7 +213,7 @@ class db:
 			cursor = worker.connection.cursor(MySQLdb.cursors.DictCursor)
 			cursor.execute(query, params)
 			log.debug(query)
-			if all == True:
+			if _all:
 				return cursor.fetchall()
 			else:
 				return cursor.fetchone()
@@ -222,7 +221,7 @@ class db:
 			log.warning("MySQL connection lost! Using next worker...")
 			del worker
 			worker = None
-			return self.fetch(query, params, all)
+			return self.fetch(query, params, _all)
 		finally:
 			# Close the cursor and release worker's lock
 			if cursor is not None:
