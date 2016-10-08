@@ -28,7 +28,7 @@ class datadogClient:
 			self.client.start()
 			self.periodicChecks = periodicChecks
 			if self.periodicChecks is not None:
-				self.__periodicCheckLoop()
+				threading.Thread(target=self.__periodicCheckLoop).start()
 		else:
 			self.client = None
 
@@ -70,4 +70,4 @@ class datadogClient:
 			self.gauge(i.name, i.checkFunction())
 
 		# Schedule a new datadog update
-		threading.Timer(5, self.__periodicCheckLoop).start()
+		threading.Timer(10, self.__periodicCheckLoop).start()
