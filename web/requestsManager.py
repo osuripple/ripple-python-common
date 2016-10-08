@@ -36,15 +36,15 @@ class asyncRequestHandler(tornado.web.RequestHandler):
 	@tornado.gen.engine
 	def post(self, *args, **kwargs):
 		try:
-			st = currentMilliseconds()
-			glob.busyThreads += 1
+			#st = currentMilliseconds()
+			#glob.busyThreads += 1
 			yield tornado.gen.Task(runBackground, (self.asyncPost, tuple(args), dict(kwargs)))
 		except Exception as e:
 			yield tornado.gen.Task(self.captureException, exc_info=True)
 		finally:
-			et = currentMilliseconds()
+			#et = currentMilliseconds()
 			#log.info(">>>>> {} REQUEST TIME: {} ms".format(self.request.path, et-st))
-			glob.busyThreads -= 1
+			#glob.busyThreads -= 1
 			if not self._finished:
 				self.finish()
 

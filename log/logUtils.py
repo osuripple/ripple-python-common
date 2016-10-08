@@ -73,7 +73,7 @@ def warning(message, discord = None, alertDev = False):
 	discord -- if not None, send message to that discord channel through schiavo. Optional. Default = None
 	alertDev -- if True, send al hl to devs on discord. Optional. Default = False.
 	"""
-	logMessage(message, "WARNING", bcolors.YELLOW, discord, alertDev, "warnings.txt")
+	logMessage(message, "WARNING", bcolors.YELLOW, discord, alertDev)
 
 def error(message, discord = None, alertDev = True):
 	"""
@@ -83,7 +83,7 @@ def error(message, discord = None, alertDev = True):
 	discord -- if not None, send message to that discord channel through schiavo. Optional. Default = None
 	alertDev -- if True, send al hl to devs on discord. Optional. Default = False.
 	"""
-	logMessage(message, "ERROR", bcolors.RED, discord, alertDev, "errors.txt")
+	logMessage(message, "ERROR", bcolors.RED, discord, alertDev)
 
 def info(message, discord = None, alertDev = False):
 	"""
@@ -102,7 +102,7 @@ def debug(message):
 	message -- debug message
 	"""
 	if glob.debug:
-		logMessage(message, "DEBUG", bcolors.PINK, of="debug.txt")
+		logMessage(message, "DEBUG", bcolors.PINK)
 
 def chat(message):
 	"""
@@ -118,7 +118,7 @@ def pm(message):
 
 	message -- chat message
 	"""
-	logMessage(message, "CHAT", bcolors.BLUE, of="chatlog_private.txt")
+	logMessage(message, "CHAT", bcolors.BLUE)
 
 def rap(userID, message, discord=False, through="FokaBot"):
 	"""
