@@ -57,10 +57,19 @@ class asyncRequestHandler(tornado.web.RequestHandler):
 		self.finish()
 
 	def getRequestIP(self):
-		realIP = self.request.headers.get("X-Forwarded-For") if glob.cloudflare == True else self.request.headers.get("X-Real-IP")
-		if realIP is not None:
-			return realIP
-		return self.request.remote_ip
+		"""
+		Return CF-Connecting-IP (request IP when under cloudflare, you have to configure nginx to enable that)
+		If that fails, return X-Forwarded-For (request IP when not under Cloudflare)
+		if everything else fails, return remote IP
+
+		:return: Client IP address
+		"""
+		if "CF-Connecting-IP" in self.request.headers:
+			return self.request.headers.get("CF-Connecting-IP")
+		elif "X-Forwarded-For" in self.request.headers:
+			return self.request.headers.get("X-Forwarded-For")
+		else:
+			return self.request.remote_ip
 
 
 def runBackground(data, callback):
