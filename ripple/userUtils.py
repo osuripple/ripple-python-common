@@ -284,6 +284,9 @@ def updatePP(userID, gameMode):
 	mode = scoreUtils.readableGameMode(gameMode)
 	glob.db.execute("UPDATE users_stats SET pp_{}=%s WHERE id = %s LIMIT 1".format(mode), [newPP, userID])
 
+def setPP(userID, gameMode, pp):
+	mode = scoreUtils.readableGameMode(gameMode)
+	glob.db.execute("UPDATE users_stats SET pp_{}=%s WHERE id = %s LIMIT 1".format(mode), [pp, userID])
 
 def updateStats(userID, __score):
 	"""
@@ -348,6 +351,10 @@ def getRankedScore(userID, gameMode):
 		return result["ranked_score_{}".format(mode)]
 	else:
 		return 0
+
+def setRankedScore(userID, gameMode, score):
+	mode = scoreUtils.readableGameMode(gameMode)
+	glob.db.execute("UPDATE users_stats SET ranked_score_{}=%s WHERE id = %s LIMIT 1".format(mode), [score, userID])
 
 
 def getPP(userID, gameMode):
