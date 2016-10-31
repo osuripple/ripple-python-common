@@ -96,18 +96,17 @@ def checkLogin(userID, password, ip=""):
 	return -- True or False
 	"""
 	# Check cached bancho session
-	banchoSession = False
+	'''banchoSession = False
 	if ip != "":
 		banchoSession = checkBanchoSession(userID, ip)
 
 	# Return True if there's a bancho session for this user from that ip
 	if banchoSession:
-		return True
+		return True'''
 
 	# Otherwise, check password
 	# Get password data
-	passwordData = glob.db.fetch("SELECT password_md5, salt, password_version FROM users WHERE id = %s LIMIT 1",
-								 [userID])
+	passwordData = glob.db.fetch("SELECT password_md5, salt, password_version FROM users WHERE id = %s LIMIT 1", [userID])
 
 	# Make sure the query returned something
 	if passwordData is None:
@@ -118,10 +117,10 @@ def checkLogin(userID, password, ip=""):
 		return passwordUtils.checkNewPassword(password, passwordData["password_md5"])
 	if passwordData["password_version"] == 1:
 		ok = passwordUtils.checkOldPassword(password, passwordData["salt"], passwordData["password_md5"])
-		if not ok: return False
+		if not ok:
+			return False
 		newpass = passwordUtils.genBcrypt(password)
-		glob.db.execute("UPDATE users SET password_md5=%s, salt='', password_version='2' WHERE id = %s LIMIT 1",
-						[newpass, userID])
+		glob.db.execute("UPDATE users SET password_md5=%s, salt='', password_version='2' WHERE id = %s LIMIT 1", [newpass, userID])
 
 
 def getRequiredScoreForLevel(level):
