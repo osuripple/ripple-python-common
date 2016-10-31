@@ -11,7 +11,7 @@ def checkOldPassword(password, salt, rightPassword):
 	rightPassword -- right password
 	return -- bool
 	"""
-
+	return False
 	#return (rightPassword == crypt.crypt(password, "$2y$"+str(base64.b64decode(salt))))
 
 def checkNewPassword(password, dbPassword):
@@ -22,9 +22,11 @@ def checkNewPassword(password, dbPassword):
 	dbPassword -- the password in the database
 	return -- bool
 	"""
-	password = password.encode("utf8")
-	dbPassword = dbPassword.encode("utf8")
-	return bcrypt.hashpw(password, dbPassword) == dbPassword
+	if len(password) != 32:
+		return False
+	password = password.encode("utf-8")
+	dbPassword = dbPassword.encode("utf-8")
+	return bcrypt.checkpw(password, dbPassword)
 
 def genBcrypt(password):
 	"""
