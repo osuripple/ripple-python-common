@@ -69,7 +69,7 @@ class connectionsPool:
 		"""
 		db = MySQLdb.connect(*self.config)
 		db.autocommit(True)
-		db.cursor(MySQLdb.cursors.DictCursor).execute("SET SESSION query_cache_type = 0;")
+		#db.cursor(MySQLdb.cursors.DictCursor).execute("SET SESSION query_cache_type = 0;")
 		conn = worker(db, temporary)
 		return conn
 
