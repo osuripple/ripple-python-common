@@ -1,10 +1,8 @@
 import string
 import random
 import hashlib
-import sys
-from itertools import chain
-from collections import deque
 from functools import partial
+from common.log import logUtils as log
 
 import dill
 
@@ -166,4 +164,5 @@ def getTotalSize(o):
 	try:
 		return len(dill.dumps(o, recurse=True))
 	except:
+		log.error("Error while getting total object size!")
 		return 0
