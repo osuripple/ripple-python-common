@@ -1,7 +1,13 @@
 import string
 import random
 import hashlib
+import sys
+from itertools import chain
+from collections import deque
 from functools import partial
+
+import dill
+
 from common.constants import mods
 from time import localtime, strftime
 
@@ -155,3 +161,9 @@ def readableMods(__mods):
 
 def strContains(s, w):
 	return (' ' + w + ' ') in (' ' + s + ' ')
+
+def getTotalSize(o):
+	try:
+		return len(dill.dumps(o, recurse=True))
+	except:
+		return 0
