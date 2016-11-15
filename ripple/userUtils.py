@@ -37,14 +37,6 @@ def getUserStats(userID, gameMode):
 	# Return stats + game rank
 	return stats
 
-
-def cacheUserIDs():
-	"""Cache userIDs in glob.userIDCache, used later with getID()."""
-	data = glob.db.fetchAll("SELECT id, username FROM users WHERE privileges & {} > 0".format(privileges.USER_NORMAL))
-	for i in data:
-		glob.userIDCache[i["username"]] = i["id"]
-
-
 def getID(username):
 	"""
 	Get username's user ID from userID cache (if cache hit)
@@ -53,15 +45,24 @@ def getID(username):
 	username -- user
 	return -- user id or 0
 	"""
-	# Add to cache if needed
-	if username not in glob.userIDCache:
+
+	# Get userID from redis
+	userID = glob.redis.get("ripple:userid_cache_{}".format(username))
+
+	if userID is None:
+		# If it's not in redis, get it from mysql
 		userID = glob.db.fetch("SELECT id FROM users WHERE username = %s LIMIT 1", [username])
+
+		# If it's invalid, return 0
 		if userID is None:
 			return 0
-		glob.userIDCache[username] = userID["id"]
 
-	# Get userID from cache
-	return glob.userIDCache[username]
+		# Otherwise, save it in redis and return it
+		glob.redis.set("ripple:userid_cache_{}".format(username), userID["id"], 3600)	# expires in 1 hour
+		return userID["id"]
+
+	# Return userid from redis
+	return int(userID)
 
 
 def getUsername(userID):
