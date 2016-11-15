@@ -441,62 +441,58 @@ def check2FA(userID, ip):
 	result = glob.db.fetch("SELECT id FROM ip_user WHERE userid = %s AND ip = %s", [userID, ip])
 	return True if result is None else False
 
-
-def isAllowed(userID):
+def isAllowed(userID=0, priv=None):
 	"""
 	Check if userID is not banned or restricted
 
-	userID -- id of the user
+	userID -- id of the user. Required onlt if privileges is not passed.
+	priv -- privileges number. Optional. If not passed, will get it from db
 	return -- True if not banned or restricted, otherwise false.
 	"""
-	result = glob.db.fetch("SELECT privileges FROM users WHERE id = %s LIMIT 1", [userID])
-	if result is not None:
-		return (result["privileges"] & privileges.USER_NORMAL) and (result["privileges"] & privileges.USER_PUBLIC)
-	else:
-		return False
+	if priv is None:
+		priv = getPrivileges(userID)
+	return (priv & privileges.USER_NORMAL) and (priv & privileges.USER_PUBLIC)
 
 
-def isRestricted(userID):
+def isRestricted(userID=0, priv=None):
 	"""
 	Check if userID is restricted
 
 	userID -- id of the user
 	return -- True if not restricted, otherwise false.
 	"""
-	result = glob.db.fetch("SELECT privileges FROM users WHERE id = %s LIMIT 1", [userID])
-	if result is not None:
-		return (result["privileges"] & privileges.USER_NORMAL) and not (result["privileges"] & privileges.USER_PUBLIC)
-	else:
-		return False
+	if priv is None:
+		priv = getPrivileges(userID)
+	return (priv & privileges.USER_NORMAL) and not (priv & privileges.USER_PUBLIC)
 
 
-def isBanned(userID):
+def isBanned(userID=0, priv=None):
 	"""
 	Check if userID is banned
 
 	userID -- id of the user
 	return -- True if not banned, otherwise false.
 	"""
-	result = glob.db.fetch("SELECT privileges FROM users WHERE id = %s LIMIT 1", [userID])
-	if result is not None:
-		return not (result["privileges"] & 3 > 0)
-	else:
-		return True
+	if priv is None:
+		priv = getPrivileges(userID)
+	return not (priv & 3 > 0)
 
 
-def isLocked(userID):
+def isLocked(userID=0, priv=None):
 	"""
 	Check if userID is locked
 
 	userID -- id of the user
 	return -- True if not locked, otherwise false.
 	"""
-	result = glob.db.fetch("SELECT privileges FROM users WHERE id = %s LIMIT 1", [userID])
-	if result is not None:
-		return (
-		(result["privileges"] & privileges.USER_PUBLIC > 0) and (result["privileges"] & privileges.USER_NORMAL == 0))
-	else:
-		return True
+	if priv is None:
+		priv = getPrivileges(userID)
+	return ((priv & privileges.USER_PUBLIC > 0) and (priv & privileges.USER_NORMAL == 0))
+
+def isPending(userID=0, priv=None):
+	if priv is None:
+		priv = getPrivileges(userID)
+	return priv & privileges.USER_PENDING_VERIFICATION > 0
 
 
 def ban(userID):
