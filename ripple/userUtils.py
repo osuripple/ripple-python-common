@@ -801,16 +801,32 @@ def logHardware(userID, hashes, activation = False):
 		username = getUsername(userID)
 
 		# Get the list of banned or restricted users that have logged in from this or similar HWID hash set
-		banned = glob.db.fetchAll("""SELECT users.id as userid, hw_user.occurencies, users.username FROM hw_user
-						LEFT JOIN users ON users.id = hw_user.userid
-						WHERE hw_user.userid != %(userid)s
-						AND (IF(%(mac)s != 'b4ec3c4334a0249dae95c284ec5983df', hw_user.mac = %(mac)s, 1) AND hw_user.unique_id = %(uid)s AND IF(%(diskid)s != 'ffae06fb022871fe9beb58b005c5e21d', hw_user.disk_id = %(diskid)s, 1))
-						AND (users.privileges & 3 != 3)""", {
-							"userid": userID,
-							"mac": hashes[2],
-							"uid": hashes[3],
-							"diskid": hashes[4],
-						})
+		if hashes[2] == "b4ec3c4334a0249dae95c284ec5983df":
+			# Running under wine, check by unique id
+			log.debug("Logging Linux/Mac hardware")
+			banned = glob.db.fetchAll("""SELECT users.id as userid, hw_user.occurencies, users.username FROM hw_user
+				LEFT JOIN users ON users.id = hw_user.userid
+				WHERE hw_user.userid != %(userid)s
+				AND hw_user.unique_id = %(uid)s
+				AND (users.privileges & 3 != 3)""", {
+					"userid": userID,
+					"uid": hashes[3],
+				})
+		else:
+			# Running under windows, do all checks
+			log.debug("Logging Windows hardware")
+			banned = glob.db.fetchAll("""SELECT users.id as userid, hw_user.occurencies, users.username FROM hw_user
+				LEFT JOIN users ON users.id = hw_user.userid
+				WHERE hw_user.userid != %(userid)s
+				AND hw_user.mac = %(mac)s
+				AND hw_user.unique_id = %(uid)s
+				AND hw_user.disk_id = %(diskid)s
+				AND (users.privileges & 3 != 3)""", {
+					"userid": userID,
+					"mac": hashes[2],
+					"uid": hashes[3],
+					"diskid": hashes[4],
+				})
 
 		for i in banned:
 			# Get the total numbers of logins
@@ -877,12 +893,22 @@ def verifyUser(userID, hashes):
 	username = getUsername(userID)
 
 	# Make sure there are no other accounts activated with this exact mac/unique id/hwid
-	match = glob.db.fetchAll("SELECT userid FROM hw_user WHERE (IF(%(mac)s != 'b4ec3c4334a0249dae95c284ec5983df', mac = %(mac)s, 1) AND unique_id = %(uid)s AND IF(%(diskid)s != 'ffae06fb022871fe9beb58b005c5e21d', disk_id = %(diskid)s, 1)) AND userid != %(userid)s AND activated = 1 LIMIT 1", {
-		"mac": hashes[2],
-		"uid": hashes[3],
-		"diskid": hashes[4],
-		"userid": userID
-	})
+	if hashes[2] == "b4ec3c4334a0249dae95c284ec5983df":
+		# Running under wine, check only by uniqueid
+		log.debug("Veryfing with Linux/Mac hardware")
+		match = glob.db.fetchAll("SELECT userid FROM hw_user WHERE unique_id = %(uid)s AND userid != %(userid)s AND activated = 1 LIMIT 1", {
+			"uid": hashes[3],
+			"userid": userID
+		})
+	else:
+		# Running under windows, full check
+		log.debug("Veryfing with Windows hardware")
+		match = glob.db.fetchAll("SELECT userid FROM hw_user WHERE mac = %(mac)s AND unique_id = %(uid)s AND disk_id = %(diskid)s AND userid != %(userid)s AND activated = 1 LIMIT 1", {
+			"mac": hashes[2],
+			"uid": hashes[3],
+			"diskid": hashes[4],
+			"userid": userID
+		})
 
 	if match:
 		# This is a multiaccount, restrict other account and ban this account
