@@ -56,7 +56,7 @@ def getID(username):
 			return 0
 
 		# Otherwise, save it in redis and return it
-		glob.redis.set("ripple:userid_cache_{}".format(username), userID["id"], 3600)	# expires in 1 hour
+		glob.redis.set("ripple:userid_cache:{}".format(username), userID["id"], 3600)	# expires in 1 hour
 		return userID["id"]
 
 	# Return userid from redis
