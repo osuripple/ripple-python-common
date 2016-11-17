@@ -77,6 +77,17 @@ def getUsername(userID):
 		return None
 	return result["username"]
 
+def getSafeUsername(userID):
+	"""
+	Get userID's safe username
+
+	userID -- userID
+	return -- username or None
+	"""
+	result = glob.db.fetch("SELECT username_safe FROM users WHERE id = %s LIMIT 1", [userID])
+	if result is None:
+		return None
+	return result["username_safe"]
 
 def exists(userID):
 	"""
