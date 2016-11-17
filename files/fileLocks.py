@@ -6,6 +6,12 @@ class fileLocks:
 		self.locks = {}
 
 	def lockFile(self, fileName):
+		"""
+		Set a file as locked.
+
+		:param fileName: file name
+		:return:
+		"""
 		if fileName in self.locks:
 			# Acquire existing lock
 			self.locks[fileName].acquire()
@@ -15,6 +21,12 @@ class fileLocks:
 			self.locks[fileName].acquire()
 
 	def unlockFile(self, fileName):
+		"""
+		Unlock a previously locked file
+
+		:param fileName: file name
+		:return:
+		"""
 		if fileName in self.locks:
 			# Release lock if it exists
 			self.locks[fileName].release()

@@ -16,8 +16,8 @@ def stringToBool(s):
 	"""
 	Convert a string (True/true/1) to bool
 
-	s -- string/int value
-	return -- True/False
+	:param s: string/int value
+	:return: True/False
 	"""
 	return s == "True" or s == "true" or s == "1" or s == 1
 
@@ -25,8 +25,8 @@ def fileMd5(filename):
 	"""
 	Return filename's md5
 
-	filename --
-	return -- file md5
+	:param filename: name of the file
+	:return: file md5
 	"""
 	with open(filename, mode='rb') as f:
 		d = hashlib.md5()
@@ -35,7 +35,12 @@ def fileMd5(filename):
 	return d.hexdigest()
 
 def stringMd5(string):
-	"""Return string's md5"""
+	"""
+	Return string's md5
+
+	:param string: input string
+	:return: `string`'s md5
+	"""
 	d = hashlib.md5()
 	d.update(string.encode("utf-8"))
 	return d.hexdigest()
@@ -43,18 +48,17 @@ def stringMd5(string):
 def getRank(gameMode, __mods, acc, c300, c100, c50, cmiss):
 	"""
 	Return a string with rank/grade for a given score.
-	Used mainly for "tillerino"
+	Used mainly for tillerino
 
-	gameMode -- mode (0 = osu!, 1 = Taiko, 2 = CtB, 3 = osu!mania)
-	__mods -- mods bitwise number
-	acc -- accuracy
-	c300 -- 300 hit count
-	c100 -- 100 hit count
-	c50 -- 50 hit count
-	cmiss -- miss count
-	return -- rank/grade string
+	:param gameMode: game mode number
+	:param __mods: mods value
+	:param acc: accuracy
+	:param c300: 300 hit count
+	:param c100: 100 hit count
+	:param c50: 50 hit count
+	:param cmiss: misses count
+	:return: rank/grade string
 	"""
-	print("start")
 	total = c300 + c100 + c50 + cmiss
 	hdfl = (__mods & mods.HIDDEN > 0) or (__mods & mods.FLASHLIGHT > 0)
 
@@ -78,7 +82,7 @@ def getRank(gameMode, __mods, acc, c300, c100, c50, cmiss):
 			return "C"
 		return "D"
 	elif gameMode == 1:
-		# taiko not implemented as of yet.
+		# TODO: taiko rank
 		return "A"
 	elif gameMode == 2:
 		# CtB
@@ -109,32 +113,25 @@ def getRank(gameMode, __mods, acc, c300, c100, c50, cmiss):
 
 	return "A"
 
-
 def getTimestamp():
 	"""
 	Return current time in YYYY-MM-DD HH:MM:SS format.
 	Used in logs.
+
+	:return: readable timestamp
 	"""
 	return strftime("%Y-%m-%d %H:%M:%S", localtime())
 
-
 def hexString(s):
 	"""
-	Output s' bytes in HEX
-
-	s -- string
-	return -- string with hex value
+	Output `s`'s bytes in DEX
+	:param s: string
+	:return: string with HEX values
 	"""
 	return ":".join("{:02x}".format(ord(str(c))) for c in s)
 
 def readableMods(__mods):
-	"""
-	Return a string with readable std mods.
-	Used to convert a mods number for oppai
-
-	__mods -- mods bitwise number
-	return -- readable mods string, eg HDDT
-	"""
+	# TODO: same as common.scoreUtils.readableMods. Remove this or the other one.
 	r = ""
 	if __mods == 0:
 		return r
@@ -158,9 +155,22 @@ def readableMods(__mods):
 	return r
 
 def strContains(s, w):
+	"""
+	Check if `w` is in `s`
+
+	:param s: haystack
+	:param w: needle
+	:return: True if `w` is in `s`, otherwise False
+	"""
 	return (' ' + w + ' ') in (' ' + s + ' ')
 
 def getTotalSize(o):
+	"""
+	Get approximate object size using dill
+
+	:param o: object
+	:return: approximate bytes size
+	"""
 	try:
 		return len(dill.dumps(o, recurse=True))
 	except:

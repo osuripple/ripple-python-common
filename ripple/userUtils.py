@@ -7,14 +7,13 @@ from common.ripple import passwordUtils, scoreUtils
 from objects import glob
 
 
-
 def getUserStats(userID, gameMode):
 	"""
-	Get all user stats relative to gameMode with only two queries
+	Get all user stats relative to `gameMode`
 
-	userID --
-	gameMode -- gameMode number
-	return -- dictionary with results
+	:param userID:
+	:param gameMode: game mode number
+	:return: dictionary with result
 	"""
 	modeForDB = gameModes.getGameModeForDB(gameMode)
 
@@ -39,13 +38,12 @@ def getUserStats(userID, gameMode):
 
 def getID(username):
 	"""
-	Get username's user ID from userID cache (if cache hit)
+	Get username's user ID from userID redis cache (if cache hit)
 	or from db (and cache it for other requests) if cache miss
 
-	username -- user
-	return -- user id or 0
+	:param username: user
+	:return: user id or 0 if user doesn't exist
 	"""
-
 	# Get userID from redis
 	userID = glob.redis.get("ripple:userid_cache_{}".format(username))
 
@@ -64,13 +62,12 @@ def getID(username):
 	# Return userid from redis
 	return int(userID)
 
-
 def getUsername(userID):
 	"""
 	Get userID's username
 
-	userID -- userID
-	return -- username or None
+	:param userID: user id
+	:return: username or None
 	"""
 	result = glob.db.fetch("SELECT username FROM users WHERE id = %s LIMIT 1", [userID])
 	if result is None:
@@ -81,8 +78,8 @@ def getSafeUsername(userID):
 	"""
 	Get userID's safe username
 
-	userID -- userID
-	return -- username or None
+	:param userID: user id
+	:return: username or None
 	"""
 	result = glob.db.fetch("SELECT username_safe FROM users WHERE id = %s LIMIT 1", [userID])
 	if result is None:
@@ -93,19 +90,19 @@ def exists(userID):
 	"""
 	Check if given userID exists
 
-	userID -- user id to check
+	:param userID: user id to check
+	:return: True if the user exists, else False
 	"""
 	return True if glob.db.fetch("SELECT id FROM users WHERE id = %s LIMIT 1", [userID]) is not None else False
-
 
 def checkLogin(userID, password, ip=""):
 	"""
 	Check userID's login with specified password
 
-	userID -- user id
-	password -- plain md5 password
-	ip -- request IP (used to check bancho active sessions). Optional.
-	return -- True or False
+	:param userID: user id
+	:param password: md5 password
+	:param ip: request IP (used to check active bancho sessions). Optional.
+	:return: True if user id and password combination is valid, else False
 	"""
 	# Check cached bancho session
 	'''banchoSession = False
@@ -134,13 +131,12 @@ def checkLogin(userID, password, ip=""):
 		newpass = passwordUtils.genBcrypt(password)
 		glob.db.execute("UPDATE users SET password_md5=%s, salt='', password_version='2' WHERE id = %s LIMIT 1", [newpass, userID])
 
-
 def getRequiredScoreForLevel(level):
 	"""
 	Return score required to reach a level
 
-	level -- level to reach
-	return -- required score
+	:param level: level to reach
+	:return: required score
 	"""
 	if level <= 100:
 		if level >= 2:
@@ -150,13 +146,12 @@ def getRequiredScoreForLevel(level):
 	elif level >= 101:
 		return 26931190829 + 100000000000 * (level - 100)
 
-
 def getLevel(totalScore):
 	"""
 	Return level from totalScore
 
-	totalScore -- total score
-	return -- level
+	:param totalScore: total score
+	:return: level
 	"""
 	level = 1
 	while True:
@@ -175,13 +170,14 @@ def getLevel(totalScore):
 			# Not our level, calculate score for next level
 			level += 1
 
-
 def updateLevel(userID, gameMode=0, totalScore=0):
 	"""
 	Update level in DB for userID relative to gameMode
 
-	totalScore -- totalScore. Optional. If not passed, will get it from db
-	gameMode -- Game mode number used to get totalScore from db. Optional. Needed only if totalScore is not passed
+	:param userID: user id
+	:param gameMode: game mode number
+	:param totalScore: new total score
+	:return:
 	"""
 	# Make sure the user exists
 	# if not exists(userID):
@@ -201,14 +197,13 @@ def updateLevel(userID, gameMode=0, totalScore=0):
 	# Save new level
 	glob.db.execute("UPDATE users_stats SET level_{m} = %s WHERE id = %s LIMIT 1".format(m=mode), [level, userID])
 
-
 def calculateAccuracy(userID, gameMode):
 	"""
 	Calculate accuracy value for userID relative to gameMode
 
-	userID --
-	gameMode -- gameMode number
-	return -- new accuracy
+	:param userID: user id
+	:param gameMode: game mode number
+	:return: new accuracy
 	"""
 	# Select what to sort by
 	if gameMode == 0:
@@ -238,14 +233,13 @@ def calculateAccuracy(userID, gameMode):
 			v = 0
 	return v
 
-
 def calculatePP(userID, gameMode):
 	"""
 	Calculate userID's total PP for gameMode
 
-	userID -- ID of user
-	gameMode -- gameMode number
-	return -- total PP
+	:param userID: user id
+	:param gameMode: game mode number
+	:return: total PP
 	"""
 	# Get best pp scores
 	bestPPScores = glob.db.fetchAll(
@@ -264,27 +258,25 @@ def calculatePP(userID, gameMode):
 
 	return totalPP
 
-
 def updateAccuracy(userID, gameMode):
 	"""
 	Update accuracy value for userID relative to gameMode in DB
 
-	userID --
-	gameMode -- gameMode number
+	:param userID: user id
+	:param gameMode: gameMode number
+	:return:
 	"""
 	newAcc = calculateAccuracy(userID, gameMode)
 	mode = scoreUtils.readableGameMode(gameMode)
 	glob.db.execute("UPDATE users_stats SET avg_accuracy_{m} = %s WHERE id = %s LIMIT 1".format(m=mode),
 					[newAcc, userID])
 
-
 def updatePP(userID, gameMode):
 	"""
 	Update userID's pp with new value
 
-	userID -- userID
-	pp -- pp to add
-	gameMode -- gameMode number
+	:param userID: user id
+	:param gameMode: game mode number
 	"""
 	# Make sure the user exists
 	# if not exists(userID):
@@ -295,14 +287,13 @@ def updatePP(userID, gameMode):
 	mode = scoreUtils.readableGameMode(gameMode)
 	glob.db.execute("UPDATE users_stats SET pp_{}=%s WHERE id = %s LIMIT 1".format(mode), [newPP, userID])
 
-
 def updateStats(userID, __score):
 	"""
 	Update stats (playcount, total score, ranked score, level bla bla)
 	with data relative to a score object
 
-	userID --
-	__score -- score object
+	:param userID:
+	:param __score: score object
 	"""
 
 	# Make sure the user exists
@@ -334,25 +325,23 @@ def updateStats(userID, __score):
 		# Update pp
 		updatePP(userID, __score.gameMode)
 
-
 def updateLatestActivity(userID):
 	"""
 	Update userID's latest activity to current UNIX time
 
-	userID --
+	:param userID: user id
+	:return:
 	"""
 	glob.db.execute("UPDATE users SET latest_activity = %s WHERE id = %s LIMIT 1", [int(time.time()), userID])
-
 
 def getRankedScore(userID, gameMode):
 	"""
 	Get userID's ranked score relative to gameMode
 
-	userID -- userID
-	gameMode -- int value, see gameModes
-	return -- ranked score
+	:param userID: user id
+	:param gameMode: game mode number
+	:return: ranked score
 	"""
-
 	mode = scoreUtils.readableGameMode(gameMode)
 	result = glob.db.fetch("SELECT ranked_score_{} FROM users_stats WHERE id = %s LIMIT 1".format(mode), [userID])
 	if result is not None:
@@ -360,14 +349,13 @@ def getRankedScore(userID, gameMode):
 	else:
 		return 0
 
-
 def getPP(userID, gameMode):
 	"""
 	Get userID's PP relative to gameMode
 
-	userID -- userID
-	gameMode -- int value, see gameModes
-	return -- PP
+	:param userID: user id
+	:param gameMode: game mode number
+	:return: pp
 	"""
 
 	mode = scoreUtils.readableGameMode(gameMode)
@@ -377,26 +365,25 @@ def getPP(userID, gameMode):
 	else:
 		return 0
 
-
 def incrementReplaysWatched(userID, gameMode):
 	"""
 	Increment userID's replays watched by others relative to gameMode
 
-	userID -- user ID
-	gameMode -- int value, see gameModes
+	:param userID: user id
+	:param gameMode: game mode number
+	:return:
 	"""
 	mode = scoreUtils.readableGameMode(gameMode)
 	glob.db.execute(
 		"UPDATE users_stats SET replays_watched_{mode}=replays_watched_{mode}+1 WHERE id = %s LIMIT 1".format(
 			mode=mode), [userID])
 
-
 def getAqn(userID):
 	"""
 	Check if AQN folder was detected for userID
 
-	userID -- user
-	return -- True if hax, False if legit
+	:param userID: user
+	:return: True if hax, False if legit
 	"""
 	result = glob.db.fetch("SELECT aqn FROM users WHERE id = %s LIMIT 1", [userID])
 	if result is not None:
@@ -404,32 +391,35 @@ def getAqn(userID):
 	else:
 		return False
 
-
 def setAqn(userID, value=1):
 	"""
 	Set AQN folder status for userID
 
-	userID -- user
-	value -- new aqn value, default = 1
+	:param userID: user
+	:param value: new aqn value, default = 1
+	:return:
 	"""
 	glob.db.fetch("UPDATE users SET aqn = %s WHERE id = %s LIMIT 1", [value, userID])
-
 
 def IPLog(userID, ip):
 	"""
 	Log user IP
+
+	:param userID: user id
+	:param ip: IP address
+	:return:
 	"""
 	glob.db.execute("""INSERT INTO ip_user (userid, ip, occurencies) VALUES (%s, %s, '1')
 						ON DUPLICATE KEY UPDATE occurencies = occurencies + 1""", [userID, ip])
 
-
 def checkBanchoSession(userID, ip=""):
 	"""
-	Return True if there is a bancho session for userID from ip
+	Return True if there is a bancho session for `userID` from `ip`
+	If `ip` is an empty string, check if there's a bancho session for that user.
 
-	userID --
-	ip -- optional
-	return -- True/False
+	:param userID: user id
+	:param ip: ip address. Optional. Default: empty string
+	:return: True if there's an active bancho session, else False
 	"""
 	if ip != "":
 		result = glob.db.fetch("SELECT id FROM bancho_sessions WHERE userid = %s AND ip = %s LIMIT 1", [userID, ip])
@@ -438,28 +428,37 @@ def checkBanchoSession(userID, ip=""):
 
 	return False if result is None else True
 
-
 def is2FAEnabled(userID):
-	"""Returns True if 2FA is enable for this account"""
+	"""
+	Returns True if 2FA is enable for `userID`
+
+	:userID: user ID
+	:return: True if 2fa is enabled, else False
+	"""
 	result = glob.db.fetch("SELECT id FROM 2fa_telegram WHERE userid = %s LIMIT 1", [userID])
 	return True if result is not None else False
 
-
 def check2FA(userID, ip):
-	"""Returns True if this IP is untrusted"""
+	"""
+	Returns True if this IP is untrusted.
+	Returns always False if 2fa is not enabled on `userID`
+
+	:param userID: user id
+	:param ip: IP address
+	:return: True if untrusted, False if trusted or 2fa is disabled.
+	"""
 	if not is2FAEnabled(userID):
 		return False
 
 	result = glob.db.fetch("SELECT id FROM ip_user WHERE userid = %s AND ip = %s", [userID, ip])
 	return True if result is None else False
 
-
 def isAllowed(userID):
 	"""
 	Check if userID is not banned or restricted
 
-	userID -- id of the user
-	return -- True if not banned or restricted, otherwise false.
+	:param userID: user id
+	:return: True if not banned or restricted, otherwise false.
 	"""
 	result = glob.db.fetch("SELECT privileges FROM users WHERE id = %s LIMIT 1", [userID])
 	if result is not None:
@@ -467,13 +466,12 @@ def isAllowed(userID):
 	else:
 		return False
 
-
 def isRestricted(userID):
 	"""
 	Check if userID is restricted
 
-	userID -- id of the user
-	return -- True if not restricted, otherwise false.
+	:param userID: user id
+	:return: True if not restricted, otherwise false.
 	"""
 	result = glob.db.fetch("SELECT privileges FROM users WHERE id = %s LIMIT 1", [userID])
 	if result is not None:
@@ -481,13 +479,12 @@ def isRestricted(userID):
 	else:
 		return False
 
-
 def isBanned(userID):
 	"""
 	Check if userID is banned
 
-	userID -- id of the user
-	return -- True if not banned, otherwise false.
+	:param userID: user id
+	:return: True if not banned, otherwise false.
 	"""
 	result = glob.db.fetch("SELECT privileges FROM users WHERE id = %s LIMIT 1", [userID])
 	if result is not None:
@@ -495,13 +492,12 @@ def isBanned(userID):
 	else:
 		return True
 
-
 def isLocked(userID):
 	"""
 	Check if userID is locked
 
-	userID -- id of the user
-	return -- True if not locked, otherwise false.
+	:param userID: user id
+	:return: True if not locked, otherwise false.
 	"""
 	result = glob.db.fetch("SELECT privileges FROM users WHERE id = %s LIMIT 1", [userID])
 	if result is not None:
@@ -510,69 +506,68 @@ def isLocked(userID):
 	else:
 		return True
 
-
 def ban(userID):
 	"""
 	Ban userID
 
-	userID -- id of user
+	:param userID: user id
+	:return:
 	"""
 	banDateTime = int(time.time())
 	glob.db.execute("UPDATE users SET privileges = privileges & %s, ban_datetime = %s WHERE id = %s LIMIT 1",
 					[~(privileges.USER_NORMAL | privileges.USER_PUBLIC), banDateTime, userID])
 
-
 def unban(userID):
 	"""
 	Unban userID
 
-	userID -- id of user
+	:param userID: user id
+	:return:
 	"""
 	glob.db.execute("UPDATE users SET privileges = privileges | %s, ban_datetime = 0 WHERE id = %s LIMIT 1",
 					[(privileges.USER_NORMAL | privileges.USER_PUBLIC), userID])
 
-
 def restrict(userID):
 	"""
-	Put userID in restricted mode
+	Restruct userID
 
-	userID -- id of user
+	:param userID: user id
+	:return:
 	"""
 	if not isRestricted(userID):
 		banDateTime = int(time.time())
 		glob.db.execute("UPDATE users SET privileges = privileges & %s, ban_datetime = %s WHERE id = %s LIMIT 1",
 						[~privileges.USER_PUBLIC, banDateTime, userID])
 
-
 def unrestrict(userID):
 	"""
-	Remove restricted mode from userID.
+	Unrestrict userID.
 	Same as unban().
 
-	userID -- id of user
+	:param userID: user id
+	:return:
 	"""
 	unban(userID)
 
-
 def appendNotes(userID, notes, addNl=True):
 	"""
-	Append "notes" to current userID's "notes for CM"
+	Append `notes` to `userID`'s "notes for CM"
 
-	userID -- id of user
-	notes -- text to append
-	addNl -- if True, prepend \n to notes. Optional. Default: True.
+	:param userID: user id
+	:param notes: text to append
+	:param addNl: if True, prepend \n to notes. Default: True.
+	:return:
 	"""
 	if addNl:
 		notes = "\n" + notes
 	glob.db.execute("UPDATE users SET notes=CONCAT(COALESCE(notes, ''),%s) WHERE id = %s LIMIT 1", [notes, userID])
 
-
 def getPrivileges(userID):
 	"""
-	Return privileges for userID
+	Return `userID`'s privileges
 
-	userID -- id of user
-	return -- privileges number
+	:param userID: user id
+	:return: privileges number
 	"""
 	result = glob.db.fetch("SELECT privileges FROM users WHERE id = %s LIMIT 1", [userID])
 	if result is not None:
@@ -583,28 +578,28 @@ def getPrivileges(userID):
 def getSilenceEnd(userID):
 	"""
 	Get userID's **ABSOLUTE** silence end UNIX time
-	Remember to subtract time.time() to get the actual silence time
+	Remember to subtract time.time() if you want to get the actual silence time
 
-	userID -- userID
-	return -- UNIX time
+	:param userID: user id
+	:return: UNIX time
 	"""
 	return glob.db.fetch("SELECT silence_end FROM users WHERE id = %s LIMIT 1", [userID])["silence_end"]
-
 
 def silence(userID, seconds, silenceReason, author = 999):
 	"""
 	Silence someone
 
-	userID -- userID
-	seconds -- silence length in seconds
-	silenceReason -- Silence reason shown on website
-	author -- userID of who silenced the user. Default: 999
+	:param userID: user id
+	:param seconds: silence length in seconds
+	:param silenceReason: silence reason shown on website
+	:param author: userID of who silenced the user. Default: 999
+	:return:
 	"""
 	# db qurey
 	silenceEndTime = int(time.time())+seconds
 	glob.db.execute("UPDATE users SET silence_end = %s, silence_reason = %s WHERE id = %s LIMIT 1", [silenceEndTime, silenceReason, userID])
 
-	# Loh
+	# Log
 	targetUsername = getUsername(userID)
 	# TODO: exists check im drunk rn i need to sleep (stampa piede ubriaco confirmed)
 	if seconds > 0:
@@ -614,35 +609,34 @@ def silence(userID, seconds, silenceReason, author = 999):
 
 def getTotalScore(userID, gameMode):
 	"""
-	Get userID's total score relative to gameMode
+	Get `userID`'s total score relative to `gameMode`
 
-	userID -- userID
-	gameMode -- int value, see gameModes
-	return -- total score
+	:param userID: user id
+	:param gameMode: game mode number
+	:return: total score
 	"""
 	modeForDB = gameModes.getGameModeForDB(gameMode)
 	return glob.db.fetch("SELECT total_score_"+modeForDB+" FROM users_stats WHERE id = %s LIMIT 1", [userID])["total_score_"+modeForDB]
 
 def getAccuracy(userID, gameMode):
 	"""
-	Get userID's average accuracy relative to gameMode
+	Get `userID`'s average accuracy relative to `gameMode`
 
-	userID -- userID
-	gameMode -- int value, see gameModes
-	return -- accuracy
+	:param userID: user id
+	:param gameMode: game mode number
+	:return: accuracy
 	"""
 	modeForDB = gameModes.getGameModeForDB(gameMode)
 	return glob.db.fetch("SELECT avg_accuracy_"+modeForDB+" FROM users_stats WHERE id = %s LIMIT 1", [userID])["avg_accuracy_"+modeForDB]
 
 def getGameRank(userID, gameMode):
 	"""
-	Get userID's **in-game rank** (eg: #1337) relative to gameMode
+	Get `userID`'s **in-game rank** (eg: #1337) relative to gameMode
 
-	userID -- userID
-	gameMode -- int value, see gameModes
-	return -- game rank
+	:param userID: user id
+	:param gameMode: game mode number
+	:return: game rank
 	"""
-
 	modeForDB = gameModes.getGameModeForDB(gameMode)
 	result = glob.db.fetch("SELECT position FROM leaderboard_"+modeForDB+" WHERE user = %s LIMIT 1", [userID])
 	if result is None:
@@ -652,24 +646,22 @@ def getGameRank(userID, gameMode):
 
 def getPlaycount(userID, gameMode):
 	"""
-	Get userID's playcount relative to gameMode
+	Get `userID`'s playcount relative to `gameMode`
 
-	userID -- userID
-	gameMode -- int value, see gameModes
-	return -- playcount
+	:param userID: user id
+	:param gameMode: game mode number
+	:return: playcount
 	"""
-
 	modeForDB = gameModes.getGameModeForDB(gameMode)
 	return glob.db.fetch("SELECT playcount_"+modeForDB+" FROM users_stats WHERE id = %s LIMIT 1", [userID])["playcount_"+modeForDB]
 
 def getFriendList(userID):
 	"""
-	Get userID's friendlist
+	Get `userID`'s friendlist
 
-	userID -- userID
-	return -- list with friends userIDs. [0] if no friends.
+	:param userID: user id
+	:return: list with friends userIDs. [0] if no friends.
 	"""
-
 	# Get friends from db
 	friends = glob.db.fetchAll("SELECT user2 FROM users_relationships WHERE user1 = %s", [userID])
 
@@ -685,12 +677,12 @@ def getFriendList(userID):
 
 def addFriend(userID, friendID):
 	"""
-	Add friendID to userID's friend list
+	Add `friendID` to `userID`'s friend list
 
-	userID -- user
-	friendID -- new friend
+	:param userID: user id
+	:param friendID: new friend
+	:return:
 	"""
-
 	# Make sure we aren't adding us to our friends
 	if userID == friendID:
 		return
@@ -704,33 +696,34 @@ def addFriend(userID, friendID):
 
 def removeFriend(userID, friendID):
 	"""
-	Remove friendID from userID's friend list
+	Remove `friendID` from `userID`'s friend list
 
-	userID -- user
-	friendID -- old friend
+	:param userID: user id
+	:param friendID: old friend
+	:return:
 	"""
 	# Delete user relationship. We don't need to check if the relationship was there, because who gives a shit,
 	# if they were not friends and they don't want to be anymore, be it. ¯\_(ツ)_/¯
+	# TODO: LIMIT 1
 	glob.db.execute("DELETE FROM users_relationships WHERE user1 = %s AND user2 = %s", [userID, friendID])
 
 
 def getCountry(userID):
 	"""
-	Get userID's country **(two letters)**.
-	Use countryHelper.getCountryID with what that function returns
-	to get osu! country ID relative to that user
+	Get `userID`'s country **(two letters)**.
 
-	userID -- user
-	return -- country code (two letters)
+	:param userID: user id
+	:return: country code (two letters)
 	"""
 	return glob.db.fetch("SELECT country FROM users_stats WHERE id = %s LIMIT 1", [userID])["country"]
 
 def setCountry(userID, country):
 	"""
-	Set userID's country (two letters)
+	Set userID's country
 
-	userID -- userID
-	country -- country letters
+	:param userID: user id
+	:param country: country letters
+	:return:
 	"""
 	glob.db.execute("UPDATE users_stats SET country = %s WHERE id = %s LIMIT 1", [country, userID])
 
@@ -738,6 +731,10 @@ def logIP(userID, ip):
 	"""
 	User IP log
 	USED FOR MULTIACCOUNT DETECTION
+
+	:param userID: user id
+	:param ip: IP address
+	:return:
 	"""
 	glob.db.execute("""INSERT INTO ip_user (userid, ip, occurencies) VALUES (%s, %s, 1)
 						ON DUPLICATE KEY UPDATE occurencies = occurencies + 1""", [userID, ip])
@@ -747,8 +744,9 @@ def saveBanchoSession(userID, ip):
 	Save userid and ip of this token in bancho_sessions table.
 	Used to cache logins on LETS requests
 
-	userID --
-	ip -- user's ip address
+	:param userID: user ID
+	:param ip: IP address
+	:return:
 	"""
 	glob.db.execute("INSERT INTO bancho_sessions (id, userid, ip) VALUES (NULL, %s, %s)", [userID, ip])
 
@@ -756,8 +754,9 @@ def deleteBanchoSessions(userID, ip):
 	"""
 	Delete this bancho session from DB
 
-	userID --
-	ip -- user's IP address
+	:param userID: user id
+	:param ip: IP address
+	:return:
 	"""
 	try:
 		glob.db.execute("DELETE FROM bancho_sessions WHERE userid = %s AND ip = %s", [userID, ip])
@@ -768,12 +767,21 @@ def setPrivileges(userID, priv):
 	"""
 	Set userID's privileges in db
 
-	userID -- id of user
-	priv -- privileges number
+	:param userID: user id
+	:param priv: privileges number
+	:return:
 	"""
 	glob.db.execute("UPDATE users SET privileges = %s WHERE id = %s LIMIT 1", [priv, userID])
 
 def isInPrivilegeGroup(userID, groupName):
+	"""
+	Check if `userID` is in a privilege group.
+	Donor privilege is ignored while checking for groups.
+
+	:param userID: user id
+	:param groupName: privilege group name
+	:return: True if `userID` is in `groupName`, else False
+	"""
 	groupPrivileges = glob.db.fetch("SELECT privileges FROM privileges_groups WHERE name = %s LIMIT 1", [groupName])
 	if groupPrivileges is None:
 		return False
@@ -791,14 +799,16 @@ def logHardware(userID, hashes, activation = False):
 	Hardware log
 	USED FOR MULTIACCOUNT DETECTION
 
-	Peppy's botnet (client data) structure (new line = "|", already split)
-	[0] osu! version
-	[1] plain mac addressed, separated by "."
-	[2] mac addresses hash set
-	[3] unique ID
-	[4] disk ID
 
-	return -- True if hw is not banned, otherwise false
+	:param userID: user id
+	:param hashes:	Peppy's botnet (client data) structure (new line = "|", already split)
+					[0] osu! version
+					[1] plain mac addressed, separated by "."
+					[2] mac addresses hash set
+					[3] unique ID
+					[4] disk ID
+	:param activation: if True, set this hash as used for activation. Default: False.
+	:return: True if hw is not banned, otherwise false
 	"""
 	# Make sure the strings are not empty
 	for i in hashes[2:5]:
@@ -886,14 +896,26 @@ def resetPendingFlag(userID, success=True):
 	"""
 	Remove pending flag from an user.
 
-	userID -- ID of the user
-	success -- if True, set USER_PUBLIC and USER_NORMAL flags too
+	:param userID: user id
+	:param success: if True, set USER_PUBLIC and USER_NORMAL flags too
 	"""
 	glob.db.execute("UPDATE users SET privileges = privileges & %s WHERE id = %s LIMIT 1", [~privileges.USER_PENDING_VERIFICATION, userID])
 	if success:
 		glob.db.execute("UPDATE users SET privileges = privileges | %s WHERE id = %s LIMIT 1", [(privileges.USER_PUBLIC | privileges.USER_NORMAL), userID])
 
 def verifyUser(userID, hashes):
+	"""
+	Activate `userID`'s account.
+
+	:param userID: user id
+	:param hashes: 	Peppy's botnet (client data) structure (new line = "|", already split)
+					[0] osu! version
+					[1] plain mac addressed, separated by "."
+					[2] mac addresses hash set
+					[3] unique ID
+					[4] disk ID
+	:return: True if verified successfully, else False (multiaccount)
+	"""
 	# Check for valid hash set
 	for i in hashes[2:5]:
 		if i == "":
@@ -956,8 +978,10 @@ def verifyUser(userID, hashes):
 
 def hasVerifiedHardware(userID):
 	"""
-	userID -- id of the user
-	return -- True if hwid activation data is in db, otherwise false
+	Checks if `userID` has activated his account through HWID
+
+	:param userID: user id
+	:return: True if hwid activation data is in db, otherwise False
 	"""
 	data = glob.db.fetch("SELECT id FROM hw_user WHERE userid = %s AND activated = 1 LIMIT 1", [userID])
 	if data is not None:
@@ -966,8 +990,9 @@ def hasVerifiedHardware(userID):
 
 def getDonorExpire(userID):
 	"""
-	Return userID's donor expiration UNIX timestamp
-	:param userID:
+	Return `userID`'s donor expiration UNIX timestamp
+
+	:param userID: user id
 	:return: donor expiration UNIX timestamp
 	"""
 	data = glob.db.fetch("SELECT donor_expire FROM users WHERE id = %s LIMIT 1", [userID])

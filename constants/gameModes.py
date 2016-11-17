@@ -5,10 +5,10 @@ MANIA = 3
 
 def getGameModeForDB(gameMode):
 	"""
-	Convert a gamemode number to string for database table/column
+	Convert a game mode number to string for database table/column
 
-	gameMode -- gameMode int or variable (ex: gameMode.std)
-	return -- game mode readable string for db
+	:param gameMode: game mode number
+	:return: game mode readable string for db
 	"""
 
 	if gameMode == STD:
@@ -21,6 +21,12 @@ def getGameModeForDB(gameMode):
 		return "mania"
 
 def getGamemodeFull(gameMode):
+	"""
+	Get game mode name from game mode number
+
+	:param gameMode: game mode number
+	:return: game mode readable name
+	"""
 	if gameMode == STD:
 		return "osu!"
 	elif gameMode == TAIKO:
@@ -34,8 +40,8 @@ def getGameModeForPrinting(gameMode):
 	"""
 	Convert a gamemode number to string for showing to a user (e.g. !last)
 
-	gameMode -- gameMode int or variable (ex: gameMode.std)
-	return -- game mode readable string for a human
+	:param gameMode: gameMode int or variable (ex: gameMode.std)
+	:param return: game mode readable string for a human
 	"""
 	if gameMode == STD:
 		return "osu!"

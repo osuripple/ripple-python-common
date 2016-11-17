@@ -4,12 +4,13 @@ import bcrypt
 
 def checkOldPassword(password, salt, rightPassword):
 	"""
-	Check if password+salt corresponds to rightPassword
+	Check if `password` + `salt` corresponds to `rightPassword`
+	NOT USED ANYMORE! RETURNS ALWAYS FALSE!
 
-	password -- input password
-	salt -- password's salt
-	rightPassword -- right password
-	return -- bool
+	:param password: input password
+	:param salt: password's salt
+	:param rightPassword: tight password
+	:return: True if the password is correct, otherwise False.
 	"""
 	return False
 	#return (rightPassword == crypt.crypt(password, "$2y$"+str(base64.b64decode(salt))))
@@ -18,9 +19,9 @@ def checkNewPassword(password, dbPassword):
 	"""
 	Check if a password (version 2) is right.
 
-	password -- input password
-	dbPassword -- the password in the database
-	return -- bool
+	:param password: input password
+	:param dbPassword: the password in the database
+	:return: True if the password is correct, otherwise False.
 	"""
 	if len(password) != 32:
 		return False
@@ -32,7 +33,7 @@ def genBcrypt(password):
 	"""
 	Bcrypts a password.
 
-	password -- the password to hash.
-	return -- bytestring
+	:param password: the password to hash
+	:return: bytestring
 	"""
 	return bcrypt.hashpw(password.encode("utf8"), bcrypt.gensalt(10, b'2a'))
