@@ -36,6 +36,17 @@ def getUserStats(userID, gameMode):
 	# Return stats + game rank
 	return stats
 
+def getIDSafe(safeUsername):
+	"""
+	Get user ID from a safe username
+	:param safeUsername: safe username
+	:return: None if the user doesn't exist, else user id
+	"""
+	result = glob.db.fetch("SELECT id FROM users WHERE username_safe = %s LIMIT 1", [safeUsername])
+	if result is not None:
+		return result["id"]
+	return None
+
 def getID(username):
 	"""
 	Get username's user ID from userID redis cache (if cache hit)
@@ -45,19 +56,20 @@ def getID(username):
 	:return: user id or 0 if user doesn't exist
 	"""
 	# Get userID from redis
-	userID = glob.redis.get("ripple:userid_cache_{}".format(username))
+	usernameSafe = safeUsername(username)
+	userID = glob.redis.get("ripple:userid_cache:{}".format(usernameSafe))
 
 	if userID is None:
 		# If it's not in redis, get it from mysql
-		userID = glob.db.fetch("SELECT id FROM users WHERE username = %s LIMIT 1", [username])
+		userID = getIDSafe(usernameSafe)
 
 		# If it's invalid, return 0
 		if userID is None:
 			return 0
 
 		# Otherwise, save it in redis and return it
-		glob.redis.set("ripple:userid_cache:{}".format(username), userID["id"], 3600)	# expires in 1 hour
-		return userID["id"]
+		glob.redis.set("ripple:userid_cache:{}".format(usernameSafe), userID, 3600)	# expires in 1 hour
+		return userID
 
 	# Return userid from redis
 	return int(userID)
@@ -999,3 +1011,59 @@ def getDonorExpire(userID):
 	if data is not None:
 		return data["donor_expire"]
 	return 0
+
+
+class invalidUsernameError(Exception):
+	pass
+
+class usernameAlreadyInUseError(Exception):
+	pass
+
+def safeUsername(username):
+	"""
+	Return `username`'s safe username
+	(all lowercase and underscores instead of spaces)
+
+	:param username: unsafe username
+	:return: safe username
+	"""
+	return username.lower().replace(" ", "_")
+
+def changeUsername(userID=0, oldUsername="", newUsername=""):
+	"""
+	Change `userID`'s username to `newUsername` in database
+
+	:param userID: user id. Required only if `oldUsername` is not passed.
+	:param oldUsername: username. Required only if `userID` is not passed.
+	:param newUsername: new username. Can't contain spaces and underscores at the same time.
+	:raise: invalidUsernameError(), usernameAlreadyInUseError()
+	:return:
+	"""
+	# Make sure new username doesn't have mixed spaces and underscores
+	if " " in newUsername and "_" in newUsername:
+		raise invalidUsernameError()
+
+	# Get safe username
+	newUsernameSafe = safeUsername(newUsername)
+
+	# Make sure this username is not already in use
+	exists = getIDSafe(newUsernameSafe)
+	if exists is not None:
+		raise usernameAlreadyInUseError()
+
+	# Get userID or oldUsername
+	if userID == 0:
+		userID = getID(oldUsername)
+	else:
+		oldUsername = getUsername(userID)
+
+	# Change username
+	print(str(newUsernameSafe))
+	glob.db.execute("UPDATE users SET username = %s, username_safe = %s WHERE id = %s LIMIT 1", [newUsername, newUsernameSafe, userID])
+	glob.db.execute("UPDATE users_stats SET username = %s WHERE id = %s LIMIT 1", [newUsername, userID])
+
+	# Empty redis username cache
+	print("WOOWOO")
+	print(safeUsername(oldUsername))
+	print("ripple:userid_cache:{}".format(safeUsername(oldUsername)))
+	glob.redis.delete("ripple:userid_cache:{}".format(safeUsername(oldUsername)))
