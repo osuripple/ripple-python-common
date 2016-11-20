@@ -117,13 +117,15 @@ def checkLogin(userID, password, ip=""):
 	:return: True if user id and password combination is valid, else False
 	"""
 	# Check cached bancho session
-	'''banchoSession = False
+	banchoSession = False
 	if ip != "":
 		banchoSession = checkBanchoSession(userID, ip)
 
 	# Return True if there's a bancho session for this user from that ip
 	if banchoSession:
-		return True'''
+		log.warning("Bancho session")
+		return True
+	log.warning("NOOOOOOOO Bancho session")
 
 	# Otherwise, check password
 	# Get password data
