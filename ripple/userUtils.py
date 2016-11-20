@@ -123,9 +123,7 @@ def checkLogin(userID, password, ip=""):
 
 	# Return True if there's a bancho session for this user from that ip
 	if banchoSession:
-		log.warning("Bancho session")
 		return True
-	log.warning("NOOOOOOOO Bancho session")
 
 	# Otherwise, check password
 	# Get password data
