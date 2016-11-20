@@ -20,6 +20,7 @@ class generalPubSubHandler():
 	def __init__(self):
 		self.structure = {}
 		self.type = "json"
+		self.strict = True
 
 	def parseData(self, data):
 		"""
@@ -33,7 +34,7 @@ class generalPubSubHandler():
 			if type(data) == int:
 				return None
 			data = json.loads(data.decode("utf-8"))
-			if shape(data) != shape(self.structure):
+			if shape(data) != shape(self.structure) and self.strict:
 				raise wrongStructureError()
 		elif self.type == "int":
 			# Parse int
