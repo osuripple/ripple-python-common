@@ -427,18 +427,16 @@ def IPLog(userID, ip):
 def checkBanchoSession(userID, ip=""):
 	"""
 	Return True if there is a bancho session for `userID` from `ip`
-	If `ip` is an empty string, check if there's a bancho session for that user.
+	If `ip` is an empty string, check if there's a bancho session for that user, from any IP.
 
 	:param userID: user id
 	:param ip: ip address. Optional. Default: empty string
 	:return: True if there's an active bancho session, else False
 	"""
 	if ip != "":
-		result = glob.db.fetch("SELECT id FROM bancho_sessions WHERE userid = %s AND ip = %s LIMIT 1", [userID, ip])
+		return glob.redis.sismember("peppy:sessions:{}".format(userID), ip)
 	else:
-		result = glob.db.fetch("SELECT id FROM bancho_sessions WHERE userid = %s LIMIT 1", [userID])
-
-	return False if result is None else True
+		return glob.redis.exists("peppy:sessions:{}".format(userID))
 
 def is2FAEnabled(userID):
 	"""
@@ -756,27 +754,24 @@ def logIP(userID, ip):
 
 def saveBanchoSession(userID, ip):
 	"""
-	Save userid and ip of this token in bancho_sessions table.
+	Save userid and ip of this token in redis
 	Used to cache logins on LETS requests
 
 	:param userID: user ID
 	:param ip: IP address
 	:return:
 	"""
-	glob.db.execute("INSERT INTO bancho_sessions (id, userid, ip) VALUES (NULL, %s, %s)", [userID, ip])
+	glob.redis.sadd("peppy:sessions:{}".format(userID), ip)
 
 def deleteBanchoSessions(userID, ip):
 	"""
-	Delete this bancho session from DB
+	Delete this bancho session from redis
 
 	:param userID: user id
 	:param ip: IP address
 	:return:
 	"""
-	try:
-		glob.db.execute("DELETE FROM bancho_sessions WHERE userid = %s AND ip = %s", [userID, ip])
-	except:
-		log.warning("Token for user: {} ip: {} doesn't exist".format(userID, ip))
+	glob.redis.srem("peppy:sessions:{}".format(userID), ip)
 
 def setPrivileges(userID, priv):
 	"""
