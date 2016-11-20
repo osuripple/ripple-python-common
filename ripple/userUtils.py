@@ -528,6 +528,7 @@ def ban(userID):
 	banDateTime = int(time.time())
 	glob.db.execute("UPDATE users SET privileges = privileges & %s, ban_datetime = %s WHERE id = %s LIMIT 1",
 					[~(privileges.USER_NORMAL | privileges.USER_PUBLIC), banDateTime, userID])
+	glob.redis.publish("peppy:ban", userID)
 
 def unban(userID):
 	"""
@@ -538,6 +539,7 @@ def unban(userID):
 	"""
 	glob.db.execute("UPDATE users SET privileges = privileges | %s, ban_datetime = 0 WHERE id = %s LIMIT 1",
 					[(privileges.USER_NORMAL | privileges.USER_PUBLIC), userID])
+	glob.redis.publish("peppy:ban", userID)
 
 def restrict(userID):
 	"""
@@ -550,6 +552,7 @@ def restrict(userID):
 		banDateTime = int(time.time())
 		glob.db.execute("UPDATE users SET privileges = privileges & %s, ban_datetime = %s WHERE id = %s LIMIT 1",
 						[~privileges.USER_PUBLIC, banDateTime, userID])
+		glob.redis.publish("peppy:ban", userID)
 
 def unrestrict(userID):
 	"""
@@ -1058,12 +1061,10 @@ def changeUsername(userID=0, oldUsername="", newUsername=""):
 		oldUsername = getUsername(userID)
 
 	# Change username
-	print(str(newUsernameSafe))
 	glob.db.execute("UPDATE users SET username = %s, username_safe = %s WHERE id = %s LIMIT 1", [newUsername, newUsernameSafe, userID])
 	glob.db.execute("UPDATE users_stats SET username = %s WHERE id = %s LIMIT 1", [newUsername, userID])
 
 	# Empty redis username cache
-	print("WOOWOO")
-	print(safeUsername(oldUsername))
-	print("ripple:userid_cache:{}".format(safeUsername(oldUsername)))
+	# TODO: Le pipe woo woo
 	glob.redis.delete("ripple:userid_cache:{}".format(safeUsername(oldUsername)))
+	glob.redis.delete("ripple:change_username_pending:{}".format(userID))
