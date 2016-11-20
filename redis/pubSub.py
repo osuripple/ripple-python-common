@@ -1,6 +1,7 @@
 import threading
 from common.log import logUtils as log
 from common.redis import generalPubSubHandler
+from common.sentry import sentry
 
 class listener(threading.Thread):
 	def __init__(self, r, handlers):
@@ -33,25 +34,35 @@ class listener(threading.Thread):
 		self.pubSub.subscribe(channels)
 		log.info("Subscribed to redis pubsub channels: {}".format(channels))
 
+	@sentry.capture()
+	def processItem(self, item):
+		"""
+		Processes a pubSub item by calling channel's handler
+
+		:param item: incoming data
+		:return:
+		"""
+		if item["type"] == "message":
+			# Process the message only if the channel has received a message
+			# Decode the message
+			item["channel"] = item["channel"].decode("utf-8")
+
+			# Make sure the handler exists
+			if item["channel"] in self.handlers:
+				log.info("Redis pubsub: {} <- {} ".format(item["channel"], item["data"]))
+				if isinstance(self.handlers[item["channel"]], generalPubSubHandler.generalPubSubHandler):
+					# Handler class
+					self.handlers[item["channel"]].handle(item["data"])
+				else:
+					# Function
+					self.handlers[item["channel"]](item["data"])
+
 	def run(self):
 		"""
-		Listen for data on incoming channels and call handlers.
+		Listen for data on incoming channels and process it.
 		Runs forever.
 
 		:return:
 		"""
 		for item in self.pubSub.listen():
-			if item["type"] == "message":
-				# Process the message only if the channel has received a message
-				# Decode the message
-				item["channel"] = item["channel"].decode("utf-8")
-
-				# Make sure the handler exists
-				if item["channel"] in self.handlers:
-					log.info("Redis pubsub: {} <- {} ".format(item["channel"], item["data"]))
-					if isinstance(self.handlers[item["channel"]], generalPubSubHandler.generalPubSubHandler):
-						# Handler class
-						self.handlers[item["channel"]].handle(item["data"])
-					else:
-						# Function
-						self.handlers[item["channel"]](item["data"])
+			self.processItem(item)
