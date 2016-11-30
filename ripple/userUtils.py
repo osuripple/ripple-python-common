@@ -1025,7 +1025,7 @@ def safeUsername(username):
 	:param username: unsafe username
 	:return: safe username
 	"""
-	return username.lower().replace(" ", "_")
+	return username.lower().strip().replace(" ", "_")
 
 def changeUsername(userID=0, oldUsername="", newUsername=""):
 	"""
