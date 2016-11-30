@@ -440,13 +440,17 @@ def checkBanchoSession(userID, ip=""):
 
 def is2FAEnabled(userID):
 	"""
-	Returns True if 2FA is enable for `userID`
+	Returns True if 2FA/Google auth 2FA is enable for `userID`
 
 	:userID: user ID
 	:return: True if 2fa is enabled, else False
 	"""
-	result = glob.db.fetch("SELECT id FROM 2fa_telegram WHERE userid = %s LIMIT 1", [userID])
-	return True if result is not None else False
+	result = glob.db.fetch("SELECT IFNULL((SELECT 1 FROM 2fa_telegram WHERE userid = %(userid)s LIMIT 1), 0) | IFNULL((SELECT 2 FROM 2fa_totp WHERE userid = %(userid)s AND enabled = 1 LIMIT 1), 0) AS x", {
+		"userid": userID
+	})
+	if result is None:
+		return False
+	return True if result["x"] > 0 else False
 
 def check2FA(userID, ip):
 	"""
