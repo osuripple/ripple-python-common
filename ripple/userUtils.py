@@ -224,7 +224,7 @@ def calculateAccuracy(userID, gameMode):
 		sortby = "accuracy"
 	# Get best accuracy scores
 	bestAccScores = glob.db.fetchAll(
-		"SELECT accuracy FROM scores WHERE userid = %s AND play_mode = %s AND completed = 3 ORDER BY " + sortby + " DESC LIMIT 100",
+		"SELECT accuracy FROM scores WHERE userid = %s AND play_mode = %s AND completed = 3 ORDER BY " + sortby + " DESC LIMIT 500",
 		[userID, gameMode])
 
 	v = 0
@@ -255,7 +255,7 @@ def calculatePP(userID, gameMode):
 	"""
 	# Get best pp scores
 	bestPPScores = glob.db.fetchAll(
-		"SELECT pp FROM scores WHERE userid = %s AND play_mode = %s AND completed = 3 ORDER BY pp DESC LIMIT 100",
+		"SELECT pp FROM scores WHERE userid = %s AND play_mode = %s AND completed = 3 ORDER BY pp DESC LIMIT 500",
 		[userID, gameMode])
 
 	# Calculate weighted PP
