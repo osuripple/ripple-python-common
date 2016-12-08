@@ -17,7 +17,7 @@ class asyncRequestHandler(tornado.web.RequestHandler):
 	def get(self, *args, **kwargs):
 		try:
 			yield tornado.gen.Task(runBackground, (self.asyncGet, tuple(args), dict(kwargs)))
-		except Exception as e:
+		except Exception:
 			yield tornado.gen.Task(self.captureException, exc_info=True)
 		finally:
 			if not self._finished:
@@ -28,7 +28,7 @@ class asyncRequestHandler(tornado.web.RequestHandler):
 	def post(self, *args, **kwargs):
 		try:
 			yield tornado.gen.Task(runBackground, (self.asyncPost, tuple(args), dict(kwargs)))
-		except Exception as e:
+		except Exception:
 			yield tornado.gen.Task(self.captureException, exc_info=True)
 		finally:
 			if not self._finished:
@@ -36,11 +36,9 @@ class asyncRequestHandler(tornado.web.RequestHandler):
 
 	def asyncGet(self, *args, **kwargs):
 		self.send_error(405)
-		self.finish()
 
 	def asyncPost(self, *args, **kwargs):
 		self.send_error(405)
-		self.finish()
 
 	def getRequestIP(self):
 		"""

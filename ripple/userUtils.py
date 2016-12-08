@@ -36,13 +36,13 @@ def getUserStats(userID, gameMode):
 	# Return stats + game rank
 	return stats
 
-def getIDSafe(safeUsername):
+def getIDSafe(_safeUsername):
 	"""
 	Get user ID from a safe username
-	:param safeUsername: safe username
+	:param _safeUsername: safe username
 	:return: None if the user doesn't exist, else user id
 	"""
-	result = glob.db.fetch("SELECT id FROM users WHERE username_safe = %s LIMIT 1", [safeUsername])
+	result = glob.db.fetch("SELECT id FROM users WHERE username_safe = %s LIMIT 1", [_safeUsername])
 	if result is not None:
 		return result["id"]
 	return None
@@ -1049,8 +1049,7 @@ def changeUsername(userID=0, oldUsername="", newUsername=""):
 	newUsernameSafe = safeUsername(newUsername)
 
 	# Make sure this username is not already in use
-	exists = getIDSafe(newUsernameSafe)
-	if exists is not None:
+	if getIDSafe(newUsernameSafe) is not None:
 		raise usernameAlreadyInUseError()
 
 	# Get userID or oldUsername

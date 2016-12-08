@@ -34,15 +34,15 @@ def fileMd5(filename):
 			d.update(buf)
 	return d.hexdigest()
 
-def stringMd5(string):
+def stringMd5(s):
 	"""
 	Return string's md5
 
-	:param string: input string
+	:param s: input string
 	:return: `string`'s md5
 	"""
 	d = hashlib.md5()
-	d.update(string.encode("utf-8"))
+	d.update(s.encode("utf-8"))
 	return d.hexdigest()
 
 def getRank(gameMode, __mods, acc, c300, c100, c50, cmiss):

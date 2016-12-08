@@ -34,7 +34,7 @@ def readableMods(m):
 	Used to convert a mods number for oppai
 
 	:param m: mods bitwise number
-	:param return: readable mods string, eg HDDT
+	:return: readable mods string, eg HDDT
 	"""
 	r = ""
 	if m == 0:
