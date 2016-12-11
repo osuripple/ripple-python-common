@@ -265,7 +265,6 @@ def calculatePP(userID, gameMode):
 		for i in bestPPScores:
 			new = round(round(i["pp"]) * 0.95 ** k)
 			totalPP += new
-			# print("{} (w {}% aka {})".format(i["pp"], 0.95 ** k * 100, new))
 			k += 1
 
 	return totalPP
