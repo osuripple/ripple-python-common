@@ -36,13 +36,13 @@ def getUserStats(userID, gameMode):
 	# Return stats + game rank
 	return stats
 
-def getIDSafe(safeUsername):
+def getIDSafe(_safeUsername):
 	"""
 	Get user ID from a safe username
-	:param safeUsername: safe username
+	:param _safeUsername: safe username
 	:return: None if the user doesn't exist, else user id
 	"""
-	result = glob.db.fetch("SELECT id FROM users WHERE username_safe = %s LIMIT 1", [safeUsername])
+	result = glob.db.fetch("SELECT id FROM users WHERE username_safe = %s LIMIT 1", [_safeUsername])
 	if result is not None:
 		return result["id"]
 	return None
@@ -224,7 +224,7 @@ def calculateAccuracy(userID, gameMode):
 		sortby = "accuracy"
 	# Get best accuracy scores
 	bestAccScores = glob.db.fetchAll(
-		"SELECT accuracy FROM scores WHERE userid = %s AND play_mode = %s AND completed = 3 ORDER BY " + sortby + " DESC LIMIT 100",
+		"SELECT accuracy FROM scores WHERE userid = %s AND play_mode = %s AND completed = 3 ORDER BY " + sortby + " DESC LIMIT 500",
 		[userID, gameMode])
 
 	v = 0
@@ -255,7 +255,7 @@ def calculatePP(userID, gameMode):
 	"""
 	# Get best pp scores
 	bestPPScores = glob.db.fetchAll(
-		"SELECT pp FROM scores WHERE userid = %s AND play_mode = %s AND completed = 3 ORDER BY pp DESC LIMIT 100",
+		"SELECT pp FROM scores WHERE userid = %s AND play_mode = %s AND completed = 3 ORDER BY pp DESC LIMIT 500",
 		[userID, gameMode])
 
 	# Calculate weighted PP
@@ -1048,8 +1048,7 @@ def changeUsername(userID=0, oldUsername="", newUsername=""):
 	newUsernameSafe = safeUsername(newUsername)
 
 	# Make sure this username is not already in use
-	exists = getIDSafe(newUsernameSafe)
-	if exists is not None:
+	if getIDSafe(newUsernameSafe) is not None:
 		raise usernameAlreadyInUseError()
 
 	# Get userID or oldUsername

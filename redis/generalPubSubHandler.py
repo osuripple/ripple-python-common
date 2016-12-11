@@ -16,7 +16,7 @@ def shape(d):
 class wrongStructureError(Exception):
 	pass
 
-class generalPubSubHandler():
+class generalPubSubHandler:
 	def __init__(self):
 		self.structure = {}
 		self.type = "json"

@@ -41,7 +41,7 @@ def getGameModeForPrinting(gameMode):
 	Convert a gamemode number to string for showing to a user (e.g. !last)
 
 	:param gameMode: gameMode int or variable (ex: gameMode.std)
-	:param return: game mode readable string for a human
+	:return: game mode readable string for a human
 	"""
 	if gameMode == STD:
 		return "osu!"
