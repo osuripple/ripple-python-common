@@ -28,7 +28,7 @@ class worker:
 		try:
 			self.connection.cursor(MySQLdb.cursors.DictCursor).execute("SELECT 1+1")
 			return True
-		except:
+		except MySQLdb.Error:
 			return False
 
 	def __del__(self):

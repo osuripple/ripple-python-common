@@ -1,11 +1,15 @@
+import sys
+import traceback
+
 import tornado
 import tornado.web
 import tornado.gen
 from tornado.ioloop import IOLoop
 from objects import glob
 from common.log import logUtils as log
+from raven.contrib.tornado import SentryMixin
 
-class asyncRequestHandler(tornado.web.RequestHandler):
+class asyncRequestHandler(SentryMixin, tornado.web.RequestHandler):
 	"""
 	Tornado asynchronous request handler
 	create a class that extends this one (requestHelper.asyncRequestHandler)
@@ -18,7 +22,9 @@ class asyncRequestHandler(tornado.web.RequestHandler):
 		try:
 			yield tornado.gen.Task(runBackground, (self.asyncGet, tuple(args), dict(kwargs)))
 		except Exception:
-			yield tornado.gen.Task(self.captureException, exc_info=True)
+			log.error("sosUnknown error!\n```\n{}\n{}```".format(sys.exc_info(), traceback.format_exc()))
+			if glob.sentry:
+				yield tornado.gen.Task(self.captureException, exc_info=True)
 		finally:
 			if not self._finished:
 				self.finish()
@@ -29,7 +35,9 @@ class asyncRequestHandler(tornado.web.RequestHandler):
 		try:
 			yield tornado.gen.Task(runBackground, (self.asyncPost, tuple(args), dict(kwargs)))
 		except Exception:
-			yield tornado.gen.Task(self.captureException, exc_info=True)
+			log.error("sasUnknown error!\n```\n{}\n{}```".format(sys.exc_info(), traceback.format_exc()))
+			if glob.sentry:
+				yield tornado.gen.Task(self.captureException, exc_info=True)
 		finally:
 			if not self._finished:
 				self.finish()

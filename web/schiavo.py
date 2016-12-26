@@ -33,7 +33,7 @@ class schiavo:
 				finalMsg = "{prefix} {message}".format(prefix=self.prefix if not noPrefix else "", message=message)
 				requests.get("{}/{}?{}".format(self.botURL, channel, urlencode({ "message": finalMsg })))
 				break
-			except:
+			except requests.RequestException:
 				continue
 
 	def sendConfidential(self, message, noPrefix=False):
