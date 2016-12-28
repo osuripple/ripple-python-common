@@ -13,7 +13,7 @@ class asyncRequestHandler(SentryMixin, tornado.web.RequestHandler):
 	"""
 	Tornado asynchronous request handler
 	create a class that extends this one (requestHelper.asyncRequestHandler)
-	use asyncGet() and asyncPost() instad of get() and post().
+	use asyncGet() and asyncPost() instead of get() and post().
 	Done. I'm not kidding.
 	"""
 	@tornado.web.asynchronous
@@ -21,10 +21,6 @@ class asyncRequestHandler(SentryMixin, tornado.web.RequestHandler):
 	def get(self, *args, **kwargs):
 		try:
 			yield tornado.gen.Task(runBackground, (self.asyncGet, tuple(args), dict(kwargs)))
-		except Exception:
-			log.error("sosUnknown error!\n```\n{}\n{}```".format(sys.exc_info(), traceback.format_exc()))
-			if glob.sentry:
-				yield tornado.gen.Task(self.captureException, exc_info=True)
 		finally:
 			if not self._finished:
 				self.finish()
@@ -34,10 +30,6 @@ class asyncRequestHandler(SentryMixin, tornado.web.RequestHandler):
 	def post(self, *args, **kwargs):
 		try:
 			yield tornado.gen.Task(runBackground, (self.asyncPost, tuple(args), dict(kwargs)))
-		except Exception:
-			log.error("sasUnknown error!\n```\n{}\n{}```".format(sys.exc_info(), traceback.format_exc()))
-			if glob.sentry:
-				yield tornado.gen.Task(self.captureException, exc_info=True)
 		finally:
 			if not self._finished:
 				self.finish()

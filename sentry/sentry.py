@@ -1,7 +1,10 @@
-from common.log import logUtils as log
-from objects import glob
 import sys
 import traceback
+
+import tornado.gen
+
+from common.log import logUtils as log
+from objects import glob
 
 def capture():
 	"""
@@ -27,3 +30,29 @@ def capture():
 					glob.application.sentry_client.captureException()
 		return wrapper
 	return decorator
+
+
+def captureTornado(func):
+	"""
+	Capture an exception asynchronously in a tornado handler.
+	Use it with asyncGet/asyncPost, like this:
+
+	```
+	@tornado.web.asynchronous
+	@tornado.gen.engine
+	@sentry.captureTornado
+	def asyncGet(self):
+		...
+	```
+
+	:param func:
+	:return:
+	"""
+	def wrapper(self, *args, **kwargs):
+		try:
+			return func(self, *args, **kwargs)
+		except:
+			log.error("Unhandled exception!\n```\n{}\n{}```".format(sys.exc_info(), traceback.format_exc()))
+			if glob.sentry:
+				yield tornado.gen.Task(self.captureException, exc_info=True)
+	return wrapper
