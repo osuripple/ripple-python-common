@@ -1,5 +1,6 @@
 import time
 
+from common import generalUtils
 from common.constants import gameModes
 from common.constants import privileges
 from common.log import logUtils as log
@@ -565,17 +566,20 @@ def unrestrict(userID):
 	"""
 	unban(userID)
 
-def appendNotes(userID, notes, addNl=True):
+def appendNotes(userID, notes, addNl=True, trackDate=True):
 	"""
 	Append `notes` to `userID`'s "notes for CM"
 
 	:param userID: user id
 	:param notes: text to append
 	:param addNl: if True, prepend \n to notes. Default: True.
+	:param trackDate: if True, prepend date and hour to the note. Default: True.
 	:return:
 	"""
+	if trackDate:
+		notes = "[{}] {}".format(generalUtils.getTimestamp(), notes)
 	if addNl:
-		notes = "\n" + notes
+		notes = "\n{}".format(notes)
 	glob.db.execute("UPDATE users SET notes=CONCAT(COALESCE(notes, ''),%s) WHERE id = %s LIMIT 1", [notes, userID])
 
 def getPrivileges(userID):
@@ -876,7 +880,7 @@ def logHardware(userID, hashes, activation = False):
 			if i["occurencies"] >= perc:
 				# If the banned user has logged in more than 10% of the times from this user, restrict this user
 				restrict(userID)
-				appendNotes(userID, "-- Logged in from HWID ({hwid}) used more than 10% from user {banned} ({bannedUserID}), who is banned/restricted.".format(
+				appendNotes(userID, "Logged in from HWID ({hwid}) used more than 10% from user {banned} ({bannedUserID}), who is banned/restricted.".format(
 					hwid=hashes[2:5],
 					banned=i["username"],
 					bannedUserID=i["userid"]
@@ -965,8 +969,8 @@ def verifyUser(userID, hashes):
 
 		# Ban this user and append notes
 		ban(userID)	# this removes the USER_PENDING_VERIFICATION flag too
-		appendNotes(userID, "-- {}'s multiaccount ({}), found HWID match while verifying account ({})".format(originalUsername, originalUserID, hashes[2:5]))
-		appendNotes(originalUserID, "-- Has created multiaccount {} ({})".format(username, userID))
+		appendNotes(userID, "{}'s multiaccount ({}), found HWID match while verifying account ({})".format(originalUsername, originalUserID, hashes[2:5]))
+		appendNotes(originalUserID, "Has created multiaccount {} ({})".format(username, userID))
 
 		# Restrict the original
 		restrict(originalUserID)
