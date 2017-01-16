@@ -20,14 +20,24 @@ def cheesegullRequest(handler, requestType="GET", key="", params=None, mustHave=
 				if `wants` is a string, returns the key from the response.
 				if `wants` is a list of strings, return a dictionary containing the wanted keys.
 	"""
+	# Default values
 	if mustHave is None:
 		mustHave = []
 	if wants is None:
 		wants = []
 	if params is None:
 		params = {}
-	f = requests.post if requestType.lower() == "post" else requests.get
-	result = f("{}/{}".format(glob.conf.config["cheesegull"]["apiurl"], handler), params=params, headers= {
+
+	# Params and function
+	postData = None
+	getParams = None
+	if requestType.lower() == "post":
+		f = requests.post
+		postData = params
+	else:
+		f = requests.get
+		getParams = params
+	result = f("{}/{}".format(glob.conf.config["cheesegull"]["apiurl"], handler), params=getParams, data=postData, headers= {
 		"Authorization": key
 	})
 
@@ -86,6 +96,12 @@ def getBeatmap(id):
 	if setID is None or setID <= 0:
 		return None
 	return getBeatmapSet(setID)
+
+def updateBeatmap(setID):
+	data = cheesegullRequest("request", "POST", glob.conf.config["cheesegull"]["apikey"], params={
+		"set_id": setID
+	}, mustHave="Ok")
+	return (True, "") if data["Ok"] else (False, data["Message"])
 
 def toDirect(data):
 	s = "{SetID}.osz|{Artist}|{Title}|{Creator}|{RankedStatus}|10.00|0|{SetID}|".format(**data)
