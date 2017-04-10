@@ -28,11 +28,7 @@ def getUserStats(userID, gameMode):
 						FROM users_stats WHERE id = %s LIMIT 1""".format(gm=modeForDB), [userID])
 
 	# Get game rank
-	result = glob.db.fetch("SELECT position FROM leaderboard_{} WHERE user = %s LIMIT 1".format(modeForDB), [userID])
-	if result is None:
-		stats["gameRank"] = 0
-	else:
-		stats["gameRank"] = result["position"]
+	stats["gameRank"] = getGameRank(userID, gameMode)
 
 	# Return stats + game rank
 	return stats
@@ -657,12 +653,11 @@ def getGameRank(userID, gameMode):
 	:param gameMode: game mode number
 	:return: game rank
 	"""
-	modeForDB = gameModes.getGameModeForDB(gameMode)
-	result = glob.db.fetch("SELECT position FROM leaderboard_"+modeForDB+" WHERE user = %s LIMIT 1", [userID])
-	if result is None:
+	position = glob.redis.zrevrank("ripple:leaderboard:{}".format(gameModes.getGameModeForDB(gameMode)), userID)
+	if position is None:
 		return 0
 	else:
-		return result["position"]
+		return int(position)
 
 def getPlaycount(userID, gameMode):
 	"""
