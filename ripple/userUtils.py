@@ -657,7 +657,7 @@ def getGameRank(userID, gameMode):
 	if position is None:
 		return 0
 	else:
-		return int(position)
+		return int(position) + 1
 
 def getPlaycount(userID, gameMode):
 	"""
