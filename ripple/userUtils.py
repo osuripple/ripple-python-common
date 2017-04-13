@@ -523,10 +523,16 @@ def ban(userID):
 	:param userID: user id
 	:return:
 	"""
+	# Set user as banned in db
 	banDateTime = int(time.time())
 	glob.db.execute("UPDATE users SET privileges = privileges & %s, ban_datetime = %s WHERE id = %s LIMIT 1",
 					[~(privileges.USER_NORMAL | privileges.USER_PUBLIC), banDateTime, userID])
+
+	# Notify bancho about the ban
 	glob.redis.publish("peppy:ban", userID)
+
+	# Remove the user from global and country leaderboards
+	removeFromLeaderboard(userID)
 
 def unban(userID):
 	"""
@@ -541,16 +547,22 @@ def unban(userID):
 
 def restrict(userID):
 	"""
-	Restruct userID
+	Restrict userID
 
 	:param userID: user id
 	:return:
 	"""
 	if not isRestricted(userID):
+		# Set user as restricted in db
 		banDateTime = int(time.time())
 		glob.db.execute("UPDATE users SET privileges = privileges & %s, ban_datetime = %s WHERE id = %s LIMIT 1",
 						[~privileges.USER_PUBLIC, banDateTime, userID])
+
+		# Notify bancho about this ban
 		glob.redis.publish("peppy:ban", userID)
+
+		# Remove the user from global and country leaderboards
+		removeFromLeaderboard(userID)
 
 def unrestrict(userID):
 	"""
@@ -1065,3 +1077,17 @@ def changeUsername(userID=0, oldUsername="", newUsername=""):
 	# TODO: Le pipe woo woo
 	glob.redis.delete("ripple:userid_cache:{}".format(safeUsername(oldUsername)))
 	glob.redis.delete("ripple:change_username_pending:{}".format(userID))
+
+def removeFromLeaderboard(userID):
+	"""
+	Removes userID from global and country leaderboards.
+
+	:param userID:
+	:return:
+	"""
+	# Remove the user from global and country leaderboards, for every mode
+	country = getCountry(userID).lower()
+	for mode in ["std", "taiko", "ctb", "mania"]:
+		glob.redis.zrem("ripple:leaderboard:{}".format(mode), str(userID))
+		if country is not None and len(country) > 0 and country != "xx":
+			glob.redis.zrem("ripple:leaderboard:{}:{}".format(mode, country), str(userID))
