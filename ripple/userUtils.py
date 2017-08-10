@@ -815,7 +815,7 @@ def isInPrivilegeGroup(userID, groupName):
 		userPrivileges = userToken.privileges
 	else:
 		userPrivileges = getPrivileges(userID)
-	return (userPrivileges == groupPrivileges) or (userPrivileges == (groupPrivileges | privileges.USER_DONOR))
+	return userPrivileges & groupPrivileges == groupPrivileges
 
 
 def logHardware(userID, hashes, activation = False):
