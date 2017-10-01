@@ -42,7 +42,7 @@ def cheesegullRequest(handler, requestType="GET", key="", params=None, mustHave=
 	})
 
 	log.debug(result.url)
-	log.debug(str(result.text))
+	# log.debug(str(result.text))
 
 	try:
 		data = json.loads(result.text)
@@ -84,7 +84,7 @@ def getListing(rankedStatus, page, gameMode, query):
 		params["status"] = rankedStatus
 	if gameMode is not None:
 		params["mode"] = gameMode
-	return cheesegullRequest("search", params=params, mustHave="Sets", wants="Sets")
+	return cheesegullRequest("search", params=params)
 
 def getBeatmapSet(id):
 	glob.dog.increment(glob.DATADOG_PREFIX + ".cheesegull_requests", tags=["cheesegull:set"])
@@ -98,29 +98,49 @@ def getBeatmap(id):
 	return getBeatmapSet(setID)
 
 def updateBeatmap(setID):
-	data = cheesegullRequest("request", "POST", glob.conf.config["cheesegull"]["apikey"], params={
-		"set_id": setID
-	}, mustHave="Ok")
-	return (True, "") if data["Ok"] else (False, data["Message"])
+	# This has been deprecated
+	return
+	# data = cheesegullRequest("request", "POST", glob.conf.config["cheesegull"]["apikey"], params={
+	# 	"set_id": setID
+	# }, mustHave="Ok")
+	# return (True, "") if data["Ok"] else (False, data["Message"])
 
 def toDirect(data):
-	s = "{SetID}.osz|{Artist}|{Title}|{Creator}|{RankedStatus}|10.00|0|{SetID}|".format(**data)
-	if len(data["ChildrenBeatmaps2"]) > 0:
-		s += "{}|0|0|0||".format(data["ChildrenBeatmaps2"][0]["BeatmapID"])
-		for i in data["ChildrenBeatmaps2"]:
-			s += "{DiffName}@{Mode},".format(**i)
+	s = "{SetID}.osz|{Artist}|{Title}|{Creator}|{RankedStatus}|{MaxDiff}.00|{LastUpdate}|{SetID}|" \
+		"{SetID}|{HasVideoInt}|0|1337|{FileSizeNoVideo}|".format(
+		**data,
+		**{
+			"HasVideoInt": int(data["HasVideo"]),
+			"FileSizeNoVideo": "7331" if data["HasVideo"] else "",
+			"MaxDiff": max([x["DifficultyRating"] for x in data["ChildrenBeatmaps"]]) + 3
+		}
+	)
+	if len(data["ChildrenBeatmaps"]) > 0:
+		for i in data["ChildrenBeatmaps"]:
+			s += "{DiffNameSanitized} ({DifficultyRating}★~{BPM}♫~AR{AR}~OD{OD}~CS{CS}~HP{HP}~{ReadableLength})" \
+				 "@{Mode},".format(**i, **{
+				"DiffNameSanitized": i["DiffName"].replace("@", ""),
+				"ReadableLength": "{}m{}s".format(i["TotalLength"] // 60, i["TotalLength"] % 60)
+			})
 	s = s.strip(",")
 	s += "|"
 	return s
 
 def toDirectNp(data):
-	return "{SetID}.osz|{Artist}|{Title}|{Creator}|{RankedStatus}|10.00|0|{SetID}|{SetID}|0|0|0|".format(**data)
+	return "{SetID}.osz|{Artist}|{Title}|{Creator}|{RankedStatus}|10.00|{LastUpdate}|{SetID}|" \
+		   "{SetID}|{HasVideoInt}|0|1337|{FileSizeNoVideo}".format(
+		**data,
+		**{
+			"HasVideoInt": int(data["HasVideo"]),
+			"FileSizeNoVideo": "7331" if data["HasVideo"] else ""
+		}
+	)
 
 def directToApiStatus(directStatus):
 	if directStatus is None:
 		return None
 	elif directStatus == 0 or directStatus == 7:
-		return 1
+		return [1, 2]
 	elif directStatus == 8:
 		return 4
 	elif directStatus == 3:
