@@ -117,7 +117,7 @@ def toDirect(data):
 	)
 	if len(data["ChildrenBeatmaps"]) > 0:
 		for i in data["ChildrenBeatmaps"]:
-			s += "{DiffNameSanitized} ({DifficultyRating}★~{BPM}♫~AR{AR}~OD{OD}~CS{CS}~HP{HP}~{ReadableLength})" \
+			s += "{DiffNameSanitized} ({DifficultyRating:.2f}★~{BPM}♫~AR{AR}~OD{OD}~CS{CS}~HP{HP}~{ReadableLength})" \
 				 "@{Mode},".format(**i, **{
 				"DiffNameSanitized": i["DiffName"].replace("@", ""),
 				"ReadableLength": "{}m{}s".format(i["TotalLength"] // 60, i["TotalLength"] % 60)
