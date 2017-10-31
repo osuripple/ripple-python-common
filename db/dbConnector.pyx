@@ -72,12 +72,12 @@ class connectionsPool:
 
 		# Force utf-8
 		db.set_character_set("utf8")
-		dbc = db.cursor(MySQLdb.cursors.DictCursor)
-		dbc.execute("SET NAMES utf8;")
-		dbc.execute("SET CHARACTER SET utf8;")
-		dbc.execute("SET character_set_connection=utf8;")
-		dbc.close()
-		
+		# dbc = db.cursor(MySQLdb.cursors.DictCursor)
+		# dbc.execute("SET NAMES utf8;")
+		# dbc.execute("SET CHARACTER SET utf8;")
+		# dbc.execute("SET character_set_connection=utf8;")
+		# dbc.close()
+
 		conn = worker(db, temporary)
 		return conn
 
@@ -190,6 +190,9 @@ class db:
 		try:
 			# Create cursor, execute query and commit
 			cursor = worker.connection.cursor(MySQLdb.cursors.DictCursor)
+			cursor.execute("SET NAMES utf8;")
+			cursor.execute("SET CHARACTER SET utf8;")
+			cursor.execute("SET character_set_connection=utf8;")
 			cursor.execute(query, params)
 			log.debug(query)
 			return cursor.lastrowid
@@ -219,6 +222,9 @@ class db:
 		try:
 			# Create cursor, execute the query and fetch one/all result(s)
 			cursor = worker.connection.cursor(MySQLdb.cursors.DictCursor)
+			cursor.execute("SET NAMES utf8;")
+			cursor.execute("SET CHARACTER SET utf8;")
+			cursor.execute("SET character_set_connection=utf8;")
 			cursor.execute(query, params)
 			log.debug(query)
 			if _all:
