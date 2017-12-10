@@ -55,4 +55,6 @@ def readableMods(m):
 		r += "FL"
 	if m & mods.SPUNOUT > 0:
 		r += "SO"
+	if m & mods.TOUCHSCREEN > 0:
+		r += "TD"
 	return r

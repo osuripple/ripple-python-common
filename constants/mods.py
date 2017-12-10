@@ -1,7 +1,7 @@
 NOMOD       = 0
 NOFAIL      = 1
 EASY        = 2
-NOVIDEO     = 4
+TOUCHSCREEN = 4
 HIDDEN      = 8
 HARDROCK    = 16
 SUDDENDEATH = 32
