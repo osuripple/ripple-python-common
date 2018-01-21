@@ -1091,3 +1091,18 @@ def removeFromLeaderboard(userID):
 		glob.redis.zrem("ripple:leaderboard:{}".format(mode), str(userID))
 		if country is not None and len(country) > 0 and country != "xx":
 			glob.redis.zrem("ripple:leaderboard:{}:{}".format(mode, country), str(userID))
+
+def unlockAchievement(userID, achievementID):
+	glob.db.execute("INSERT INTO users_achievements (user_id, achievement_id, `time`) VALUES"
+					"(%s, %s, %s)", [userID, achievementID, int(time.time())])
+
+def getAchievementsVersion(userID):
+	result = glob.db.fetch("SELECT achievements_version FROM users WHERE id = %s LIMIT 1", [userID])
+	if result is None:
+		return None
+	return result["achievements_version"]
+
+def updateAchievementsVersion(userID):
+	glob.db.execute("UPDATE users SET achievements_version = %s WHERE id = %s LIMIT 1", [
+		glob.ACHIEVEMENTS_VERSION, userID
+	])
