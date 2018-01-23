@@ -196,10 +196,10 @@ class db:
 			cursor.execute(query, params)
 			log.debug(query)
 			return cursor.lastrowid
-		except MySQLdb.OperationalError:
-			del worker
-			worker = None
-			return self.execute(query, params)
+		# except MySQLdb.OperationalError:
+		# 	del worker
+		# 	worker = None
+		# 	return self.execute(query, params)
 		finally:
 			# Close the cursor and release worker's lock
 			if cursor is not None:
@@ -231,11 +231,11 @@ class db:
 				return cursor.fetchall()
 			else:
 				return cursor.fetchone()
-		except MySQLdb.OperationalError:
-			log.warning("MySQL connection lost! Using next worker...")
-			del worker
-			worker = None
-			return self.fetch(query, params, _all)
+		# except MySQLdb.OperationalError:
+		# 	log.warning("MySQL connection lost! Using next worker...")
+		# 	del worker
+		# 	worker = None
+		# 	return self.fetch(query, params, _all)
 		finally:
 			# Close the cursor and release worker's lock
 			if cursor is not None:
