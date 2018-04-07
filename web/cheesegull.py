@@ -106,6 +106,8 @@ def updateBeatmap(setID):
 	# return (True, "") if data["Ok"] else (False, data["Message"])
 
 def toDirect(data):
+	if "ChildrenBeatmaps" not in data or data["ChildrenBeatmaps"] is None:
+		raise ValueError("`data` doesn't contain a valid cheesegull response")
 	s = "{SetID}.osz|{Artist}|{Title}|{Creator}|{RankedStatus}|{MaxDiff}.00|{LastUpdate}|{SetID}|" \
 		"{SetID}|{HasVideoInt}|0|1337|{FileSizeNoVideo}|".format(
 		**data,
