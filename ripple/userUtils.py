@@ -1,4 +1,5 @@
 import time
+from _mysql import ProgrammingError
 
 from common import generalUtils
 from common.constants import gameModes
@@ -441,12 +442,9 @@ def is2FAEnabled(userID):
 	:userID: user ID
 	:return: True if 2fa is enabled, else False
 	"""
-	result = glob.db.fetch("SELECT IFNULL((SELECT 1 FROM 2fa_telegram WHERE userid = %(userid)s LIMIT 1), 0) | IFNULL((SELECT 2 FROM 2fa_totp WHERE userid = %(userid)s AND enabled = 1 LIMIT 1), 0) AS x", {
+	return glob.db.fetch("SELECT 2fa_totp.userid FROM 2fa_totp WHERE userid = %(userid)s AND enabled = 1 LIMIT 1", {
 		"userid": userID
-	})
-	if result is None:
-		return False
-	return True if result["x"] > 0 else False
+	}) is not None
 
 def check2FA(userID, ip):
 	"""
@@ -1091,6 +1089,26 @@ def removeFromLeaderboard(userID):
 		glob.redis.zrem("ripple:leaderboard:{}".format(mode), str(userID))
 		if country is not None and len(country) > 0 and country != "xx":
 			glob.redis.zrem("ripple:leaderboard:{}:{}".format(mode, country), str(userID))
+
+def deprecateTelegram2Fa(userID):
+	"""
+	Checks whether the user has enabled telegram 2fa on his account.
+	If so, disables 2fa and returns True.
+	If not, return False.
+
+	:param userID: id of the user
+	:return: True if 2fa has been disabled from the account otherwise False
+	"""
+	try:
+		telegram2Fa = glob.db.fetch("SELECT id FROM 2fa_telegram WHERE userid = %s LIMIT 1", (userID,))
+	except ProgrammingError:
+		# The table doesnt exist
+		return False
+
+	if telegram2Fa is not None:
+		glob.db.execute("DELETE FROM 2fa_telegram WHERE userid = %s LIMIT 1", (userID,))
+		return True
+	return False
 
 def unlockAchievement(userID, achievementID):
 	glob.db.execute("INSERT INTO users_achievements (user_id, achievement_id, `time`) VALUES"
