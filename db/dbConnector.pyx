@@ -1,5 +1,6 @@
 import queue
 import MySQLdb
+import MySQLdb.cursors
 import time
 from objects import glob
 from common.log import logUtils as log
@@ -25,11 +26,14 @@ class worker:
 
 		:return: True if connected, False if error occured.
 		"""
+		c = self.connection.cursor(MySQLdb.cursors.DictCursor)
 		try:
-			self.connection.cursor(MySQLdb.cursors.DictCursor).execute("SELECT 1+1")
+			c.execute("SELECT 1+1")
 			return True
 		except MySQLdb.Error:
 			return False
+		finally:
+			c.close()
 
 	def __del__(self):
 		"""
@@ -38,7 +42,6 @@ class worker:
 		:return:
 		"""
 		self.connection.close()
-		log.debug("Destroyed MySQL worker.")
 
 class connectionsPool:
 	"""
@@ -67,17 +70,12 @@ class connectionsPool:
 		:param temporary: if True, flag the worker as temporary
 		:return: instance of worker class
 		"""
-		db = MySQLdb.connect(*self.config)
-		db.autocommit(True)
-
-		# Force utf-8
-		db.set_character_set("utf8")
-		# dbc = db.cursor(MySQLdb.cursors.DictCursor)
-		# dbc.execute("SET NAMES utf8;")
-		# dbc.execute("SET CHARACTER SET utf8;")
-		# dbc.execute("SET character_set_connection=utf8;")
-		# dbc.close()
-
+		db = MySQLdb.connect(
+			*self.config,
+			autocommit=True,
+			charset="utf8",
+			use_unicode=True
+		)
 		conn = worker(db, temporary)
 		return conn
 
@@ -190,16 +188,9 @@ class db:
 		try:
 			# Create cursor, execute query and commit
 			cursor = worker.connection.cursor(MySQLdb.cursors.DictCursor)
-			cursor.execute("SET NAMES utf8;")
-			cursor.execute("SET CHARACTER SET utf8;")
-			cursor.execute("SET character_set_connection=utf8;")
 			cursor.execute(query, params)
 			log.debug(query)
 			return cursor.lastrowid
-		# except MySQLdb.OperationalError:
-		# 	del worker
-		# 	worker = None
-		# 	return self.execute(query, params)
 		finally:
 			# Close the cursor and release worker's lock
 			if cursor is not None:
@@ -222,20 +213,12 @@ class db:
 		try:
 			# Create cursor, execute the query and fetch one/all result(s)
 			cursor = worker.connection.cursor(MySQLdb.cursors.DictCursor)
-			cursor.execute("SET NAMES utf8;")
-			cursor.execute("SET CHARACTER SET utf8;")
-			cursor.execute("SET character_set_connection=utf8;")
 			cursor.execute(query, params)
 			log.debug(query)
 			if _all:
 				return cursor.fetchall()
 			else:
 				return cursor.fetchone()
-		# except MySQLdb.OperationalError:
-		# 	log.warning("MySQL connection lost! Using next worker...")
-		# 	del worker
-		# 	worker = None
-		# 	return self.fetch(query, params, _all)
 		finally:
 			# Close the cursor and release worker's lock
 			if cursor is not None:
