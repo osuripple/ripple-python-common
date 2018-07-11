@@ -1,7 +1,7 @@
 ## ripple-python-common
 Common Python code for Ripple
 
-- Origin: https://git.zxq.co/ripple/ripple-python-common
+- Origin: https://zxq.co/ripple/ripple-python-common
 - Mirror: https://github.com/osuripple/ripple-python-common
 
 ## License
