@@ -108,13 +108,12 @@ def updateBeatmap(setID):
 def toDirect(data):
 	if "ChildrenBeatmaps" not in data or data["ChildrenBeatmaps"] is None:
 		raise ValueError("`data` doesn't contain a valid cheesegull response")
-	s = "{SetID}.osz|{Artist}|{Title}|{Creator}|{RankedStatus}|{MaxDiff}.00|{LastUpdate}|{SetID}|" \
+	s = "{SetID}.osz|{Artist}|{Title}|{Creator}|{RankedStatus}|0.00|{LastUpdate}|{SetID}|" \
 		"{SetID}|{HasVideoInt}|0|1337|{FileSizeNoVideo}|".format(
 		**data,
 		**{
 			"HasVideoInt": int(data["HasVideo"]),
-			"FileSizeNoVideo": "7331" if data["HasVideo"] else "",
-			"MaxDiff": max([x["DifficultyRating"] for x in data["ChildrenBeatmaps"]]) + 3
+			"FileSizeNoVideo": "7331" if data["HasVideo"] else ""
 		}
 	)
 	if len(data["ChildrenBeatmaps"]) > 0:
