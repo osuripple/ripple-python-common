@@ -45,7 +45,7 @@ def stringMd5(s):
 	d.update(s.encode("utf-8"))
 	return d.hexdigest()
 
-def getRank(gameMode, __mods, acc, c300, c100, c50, cmiss):
+def getRank(gameMode=None, __mods=None, acc=None, c300=None, c100=None, c50=None, cmiss=None, *, score_=None):
 	"""
 	Return a string with rank/grade for a given score.
 	Used mainly for tillerino
@@ -57,8 +57,11 @@ def getRank(gameMode, __mods, acc, c300, c100, c50, cmiss):
 	:param c100: 100 hit count
 	:param c50: 50 hit count
 	:param cmiss: misses count
+	:param score_: score object. Optional.
 	:return: rank/grade string
 	"""
+	if score_ is not None:
+		return getRank(score_.gameMode, score_.mods, score_.accuracy, score_.c300, score_.c100, score_.c50, score_.cMiss)
 	total = c300 + c100 + c50 + cmiss
 	hdfl = (__mods & mods.HIDDEN > 0) or (__mods & mods.FLASHLIGHT > 0)
 
