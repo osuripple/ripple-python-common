@@ -174,13 +174,15 @@ class db:
 		"""
 		self.pool = connectionsPool(host, username, password, database, initialSize)
 
-	def execute(self, query, params = ()):
+	def execute(self, query, params=None):
 		"""
 		Executes a query
 
 		:param query: query to execute. You can bind parameters with %s
 		:param params: parameters list. First element replaces first %s and so on
 		"""
+		if params is None:
+			params = ()
 		cursor = None
 		worker = self.pool.getWorker()
 		if worker is None:
@@ -198,7 +200,7 @@ class db:
 			if worker is not None:
 				self.pool.putWorker(worker)
 
-	def fetch(self, query, params = (), _all = False):
+	def fetch(self, query, params=None, _all=False):
 		"""
 		Fetch a single value from db that matches given query
 
@@ -206,6 +208,8 @@ class db:
 		:param params: parameters list. First element replaces first %s and so on
 		:param _all: fetch one or all values. Used internally. Use fetchAll if you want to fetch all values
 		"""
+		if params is None:
+			params = ()
 		cursor = None
 		worker = self.pool.getWorker()
 		if worker is None:
@@ -226,7 +230,7 @@ class db:
 			if worker is not None:
 				self.pool.putWorker(worker)
 
-	def fetchAll(self, query, params = ()):
+	def fetchAll(self, query, params=None):
 		"""
 		Fetch all values from db that matche given query.
 		Calls self.fetch with all = True.
@@ -234,4 +238,6 @@ class db:
 		:param query: query to execute. You can bind parameters with %s
 		:param params: parameters list. First element replaces first %s and so on
 		"""
+		if params is None:
+			params = ()
 		return self.fetch(query, params, True)
