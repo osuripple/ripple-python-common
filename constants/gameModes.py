@@ -3,6 +3,13 @@ TAIKO = 1
 CTB = 2
 MANIA = 3
 
+_MODE_FROM_DB = {
+	"std": STD,
+	"taiko": TAIKO,
+	"ctb": CTB,
+	"mania": MANIA
+}
+
 def getGameModeForDB(gameMode):
 	"""
 	Convert a game mode number to string for database table/column
@@ -51,3 +58,10 @@ def getGameModeForPrinting(gameMode):
 		return "CatchTheBeat"
 	else:
 		return "osu!mania"
+
+
+def getGameModeFromDB(s):
+	try:
+		return _MODE_FROM_DB[s]
+	except KeyError:
+		return None
