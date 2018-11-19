@@ -253,8 +253,7 @@ def calculatePP(userID, gameMode):
 	"""
 	return sum(round(round(row["pp"]) * 0.95 ** i) for i, row in enumerate(glob.db.fetchAll(
 		"SELECT pp FROM scores LEFT JOIN(beatmaps) USING(beatmap_md5) "
-		"WHERE userid = %s AND play_mode = %s AND completed = 3 AND ranked >= 2 AND "
-		"(disable_pp = 0 OR ISNULL(disable_pp)) AND pp IS NOT NULL "
+		"WHERE userid = %s AND play_mode = %s AND completed = 3 AND ranked >= 2 AND disable_pp = 0 AND pp IS NOT NULL "
 		"ORDER BY pp DESC LIMIT 500",
 		(userID, gameMode)
 	)))
