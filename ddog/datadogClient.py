@@ -14,7 +14,7 @@ class periodicCheck:
 		self.checkFunction = checkFunction
 
 class datadogClient:
-	def __init__(self, apiKey=None, appKey=None, periodicChecks=None):
+	def __init__(self, apiKey=None, appKey=None, periodicChecks=None, constant_tags=None):
 		"""
 		Initialize a toggleable Datadog Client
 
@@ -24,7 +24,7 @@ class datadogClient:
 		"""
 		if apiKey is not None and appKey is not None:
 			datadog.initialize(api_key=apiKey, app_key=appKey)
-			self.client = datadog.ThreadStats()
+			self.client = datadog.ThreadStats(constant_tags=constant_tags)
 			self.client.start()
 			self.periodicChecks = periodicChecks
 			if self.periodicChecks is not None:
