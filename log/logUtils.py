@@ -1,3 +1,5 @@
+import sys
+
 from common.constants import bcolors
 from common import generalUtils
 from objects import glob
@@ -52,6 +54,7 @@ def logMessage(message, alertType = "INFO", messageColor = bcolors.ENDC, discord
 	# Log to console
 	if stdout:
 		print(finalMessageConsole)
+		sys.stdout.flush()
 
 	# Log to discord if needed
 	if discord is not None:
@@ -148,4 +151,4 @@ def rap(userID, message, discord=False, through="FokaBot"):
 	"""
 	glob.db.execute("INSERT INTO rap_logs (id, userid, text, datetime, through) VALUES (NULL, %s, %s, %s, %s)", [userID, message, int(time.time()), through])
 	username = userUtils.getUsername(userID)
-	logMessage("{} {}".format(username, message), discord=True)
+	logMessage("{} {}".format(username, message), discord=discord)
