@@ -56,3 +56,19 @@ def captureTornado(func):
 			if glob.sentry:
 				yield tornado.gen.Task(self.captureException, exc_info=True)
 	return wrapper
+
+
+def captureMessage(message, data=None, extra=None):
+	"""
+	Sends an arbitrary message to sentry. Does nothing if sentry is disabled.
+
+	:param message: the message
+	:param data: the data base, useful for specifying structured data
+					interfaces. Any key which contains a '.' will be
+					assumed to be a data interface.
+	:param extra: a dictionary of additional standard metadata
+	:return:
+	"""
+	if not glob.sentry:
+		return
+	glob.application.sentry_client.capture("raven.events.Message", message=message, data=data, extra=extra)
