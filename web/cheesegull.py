@@ -37,7 +37,7 @@ def cheesegullRequest(handler, requestType="GET", key="", params=None, mustHave=
 	else:
 		f = requests.get
 		getParams = params
-	result = f("{}/{}".format(glob.conf.config["cheesegull"]["apiurl"], handler), params=getParams, data=postData, headers= {
+	result = f("{}/{}".format(glob.conf["CHEESEGULL_API_URL"], handler), params=getParams, data=postData, headers= {
 		"Authorization": key
 	})
 
@@ -100,7 +100,7 @@ def getBeatmap(id):
 def updateBeatmap(setID):
 	# This has been deprecated
 	return
-	# data = cheesegullRequest("request", "POST", glob.conf.config["cheesegull"]["apikey"], params={
+	# data = cheesegullRequest("request", "POST", glob.conf["CHEESEGULL_API_KEY"], params={
 	# 	"set_id": setID
 	# }, mustHave="Ok")
 	# return (True, "") if data["Ok"] else (False, data["Message"])

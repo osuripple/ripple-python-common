@@ -47,17 +47,24 @@ class connectionsPool:
 	"""
 	A MySQL workers pool
 	"""
-	def __init__(self, host, username, password, database, size=128):
+	def __init__(self, host, port, username, password, database, size=128):
 		"""
 		Initialize a MySQL connections pool
 
-		:param host: MySQL host
+		:param host: MySQL server host
+		:param port: MySQL server port
 		:param username: MySQL username
 		:param password: MySQL password
 		:param database: MySQL database name
 		:param size: pool max size
 		"""
-		self.config = (host, username, password, database)
+		self.config = {
+			"host": host,
+			"port": port,
+			"user": username,
+			"passwd": password,
+			"db": database
+		}
 		self.maxSize = size
 		self.pool = queue.Queue(self.maxSize)
 		self.consecutiveEmptyPool = 0
@@ -71,7 +78,7 @@ class connectionsPool:
 		:return: instance of worker class
 		"""
 		db = MySQLdb.connect(
-			*self.config,
+			**self.config,
 			autocommit=True,
 			charset="utf8",
 			use_unicode=True
@@ -161,18 +168,19 @@ class db:
 	"""
 	A MySQL helper with multiple workers
 	"""
-	def __init__(self, host, username, password, database, initialSize):
+	def __init__(self, host, port, username, password, database, initialSize):
 		"""
 		Initialize a new MySQL database helper with multiple workers.
 		This class is thread safe.
 
-		:param host: MySQL host
+		:param host: MySQL server host
+		:param port: MySQL server port
 		:param username: MySQL username
 		:param password: MySQL password
 		:param database: MySQL database name
 		:param initialSize: initial pool size
 		"""
-		self.pool = connectionsPool(host, username, password, database, initialSize)
+		self.pool = connectionsPool(host, port, username, password, database, initialSize)
 
 	def execute(self, query, params=None):
 		"""

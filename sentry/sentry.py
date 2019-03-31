@@ -26,7 +26,7 @@ def capture():
 				return func(*args, **kwargs)
 			except:
 				log.error("Unhandled exception!\n```\n{}\n{}```".format(sys.exc_info(), traceback.format_exc()))
-				if glob.sentry:
+				if glob.conf.sentry_enabled:
 					glob.application.sentry_client.captureException()
 		return wrapper
 	return decorator
@@ -53,7 +53,7 @@ def captureTornado(func):
 			return func(self, *args, **kwargs)
 		except:
 			log.error("Unhandled exception!\n```\n{}\n{}```".format(sys.exc_info(), traceback.format_exc()))
-			if glob.sentry:
+			if glob.conf.sentry_enabled:
 				yield tornado.gen.Task(self.captureException, exc_info=True)
 	return wrapper
 
@@ -69,6 +69,6 @@ def captureMessage(message, data=None, extra=None):
 	:param extra: a dictionary of additional standard metadata
 	:return:
 	"""
-	if not glob.sentry:
+	if not glob.conf.sentry_enabled:
 		return
 	glob.application.sentry_client.capture("raven.events.Message", message=message, data=data, extra=extra)

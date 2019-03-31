@@ -118,7 +118,7 @@ def debug(message):
 	:param message: debug message
 	:return:
 	"""
-	if glob.debug:
+	if glob.conf["DEBUG"]:
 		logMessage(message, "DEBUG", bcolors.PINK)
 
 def chat(message):
