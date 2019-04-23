@@ -69,6 +69,7 @@ def captureMessage(message, data=None, extra=None):
 	:param extra: a dictionary of additional standard metadata
 	:return:
 	"""
+	log.error("Message for sentry: {}".format(message))
 	if not glob.conf.sentry_enabled:
 		return
 	glob.application.sentry_client.capture("raven.events.Message", message=message, data=data, extra=extra)
