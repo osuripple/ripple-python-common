@@ -3,7 +3,6 @@ import sys
 from common.constants import bcolors
 from common import generalUtils
 from objects import glob
-from common.ripple import userUtils
 import time
 import os
 
@@ -149,6 +148,7 @@ def rap(userID, message, discord=False, through="FokaBot"):
 	:param through: through string. Default: FokaBot
 	:return:
 	"""
+	import common.ripple
 	glob.db.execute("INSERT INTO rap_logs (id, userid, text, datetime, through) VALUES (NULL, %s, %s, %s, %s)", [userID, message, int(time.time()), through])
-	username = userUtils.getUsername(userID)
+	username = common.ripple.userUtils.getUsername(userID)
 	logMessage("{} {}".format(username, message), discord=discord)

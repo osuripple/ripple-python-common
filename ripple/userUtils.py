@@ -1,8 +1,9 @@
 import time
 from MySQLdb._exceptions import ProgrammingError
 
+import objects.beatmap
 from common import generalUtils
-from common.constants import gameModes
+from common.constants import gameModes, mods
 from common.constants import privileges
 from common.log import logUtils as log
 from common.ripple import passwordUtils, scoreUtils
@@ -282,13 +283,15 @@ def updatePP(userID, gameMode):
 		)
 	)
 
-def updateStats(userID, __score):
+
+def updateStats(userID, score_, beatmap_=None):
 	"""
 	Update stats (playcount, total score, ranked score, level bla bla)
 	with data relative to a score object
 
 	:param userID:
-	:param __score: score object
+	:param score_: score object
+	:param beatmap_: beatmap object. Optional. If not passed, it'll be determined by score_.
 	"""
 
 	# Make sure the user exists
@@ -296,29 +299,44 @@ def updateStats(userID, __score):
 		log.warning("User {} doesn't exist.".format(userID))
 		return
 
-	# Get gamemode for db
-	mode = scoreUtils.readableGameMode(__score.gameMode)
+	if beatmap_ is None:
+		beatmap_ = objects.beatmap.beatmap(score_.fileMd5, 0)
 
-	# Update total score and playcount
+	# Get gamemode for db
+	mode = scoreUtils.readableGameMode(score_.gameMode)
+
+	# Update total score, playcount and play time
+	realMapLength = beatmap_.hitLength
+	if (score_.mods & mods.DOUBLETIME) > 0:
+		realMapLength //= 1.5
+	elif (score_.mods & mods.HALFTIME) > 0:
+		realMapLength //= 0.75
 	glob.db.execute(
-		"UPDATE users_stats SET total_score_{m}=total_score_{m}+%s, playcount_{m}=playcount_{m}+1 WHERE id = %s LIMIT 1".format(
-			m=mode), [__score.score, userID])
+		"UPDATE users_stats SET total_score_{m}=total_score_{m}+%s, playcount_{m}=playcount_{m}+1, "
+		"playtime_{m} = playtime_{m} + %s "
+		"WHERE id = %s LIMIT 1".format(
+			m=mode
+		),
+		(score_.score, realMapLength, userID)
+	)
 
 	# Calculate new level and update it
-	updateLevel(userID, __score.gameMode)
+	updateLevel(userID, score_.gameMode)
 
 	# Update level, accuracy and ranked score only if we have passed the song
-	if __score.passed:
+	if score_.passed:
 		# Update ranked score
 		glob.db.execute(
 			"UPDATE users_stats SET ranked_score_{m}=ranked_score_{m}+%s WHERE id = %s LIMIT 1".format(m=mode),
-			[__score.rankedScoreIncrease, userID])
+			(score_.rankedScoreIncrease, userID)
+		)
 
 		# Update accuracy
-		updateAccuracy(userID, __score.gameMode)
+		updateAccuracy(userID, score_.gameMode)
 
 		# Update pp
-		updatePP(userID, __score.gameMode)
+		updatePP(userID, score_.gameMode)
+
 
 def updateLatestActivity(userID):
 	"""
