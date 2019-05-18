@@ -284,7 +284,7 @@ def updatePP(userID, gameMode):
 	)
 
 
-def updateStats(userID, score_, beatmap_=None):
+def updateStats(userID, score_):
 	"""
 	Update stats (playcount, total score, ranked score, level bla bla)
 	with data relative to a score object
@@ -299,25 +299,22 @@ def updateStats(userID, score_, beatmap_=None):
 		log.warning("User {} doesn't exist.".format(userID))
 		return
 
-	if beatmap_ is None:
-		beatmap_ = objects.beatmap.beatmap(score_.fileMd5, 0)
-
 	# Get gamemode for db
 	mode = scoreUtils.readableGameMode(score_.gameMode)
 
 	# Update total score, playcount and play time
-	realMapLength = beatmap_.hitLength
-	if (score_.mods & mods.DOUBLETIME) > 0:
-		realMapLength //= 1.5
-	elif (score_.mods & mods.HALFTIME) > 0:
-		realMapLength //= 0.75
+	if score_.playTime is not None:
+		realPlayTime = score_.playTime
+	else:
+		realPlayTime = score_.fullPlayTime
+
 	glob.db.execute(
 		"UPDATE users_stats SET total_score_{m}=total_score_{m}+%s, playcount_{m}=playcount_{m}+1, "
 		"playtime_{m} = playtime_{m} + %s "
 		"WHERE id = %s LIMIT 1".format(
 			m=mode
 		),
-		(score_.score, realMapLength, userID)
+		(score_.score, realPlayTime, userID)
 	)
 
 	# Calculate new level and update it
