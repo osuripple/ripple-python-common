@@ -335,6 +335,14 @@ def updateStats(userID, score_):
 		updatePP(userID, score_.gameMode)
 
 
+def incrementUserBeatmapPlaycount(userID, gameMode, beatmapID):
+	glob.db.execute(
+		"INSERT INTO users_beatmap_playcount (user_id, beatmap_id, game_mode, playcount) "
+		"VALUES (%s, %s, %s, 1) ON DUPLICATE KEY UPDATE playcount = playcount + 1",
+		(userID, beatmapID, gameMode)
+	)
+
+
 def updateLatestActivity(userID):
 	"""
 	Update userID's latest activity to current UNIX time
