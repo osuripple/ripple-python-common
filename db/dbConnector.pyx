@@ -1,7 +1,9 @@
 import queue
 import MySQLdb
 import MySQLdb.cursors
+import MySQLdb._exceptions
 import time
+
 from objects import glob
 from common.log import logUtils as log
 
@@ -164,6 +166,7 @@ class connectionsPool:
 			# Put the connection in the queue if there's space
 			self.pool.put_nowait(worker)
 
+
 class db:
 	"""
 	A MySQL helper with multiple workers
@@ -182,70 +185,51 @@ class db:
 		"""
 		self.pool = connectionsPool(host, port, username, password, database, initialSize)
 
-	def execute(self, query, params=None):
-		"""
-		Executes a query
+	def _handleReconnection(self, f):
+		def decorator(query, params=None, **kwargs):
+			if params is None:
+				params = ()
 
-		:param query: query to execute. You can bind parameters with %s
-		:param params: parameters list. First element replaces first %s and so on
-		"""
-		if params is None:
-			params = ()
-		cursor = None
-		worker = self.pool.getWorker()
-		if worker is None:
-			return None
-		try:
-			# Create cursor, execute query and commit
-			cursor = worker.connection.cursor(MySQLdb.cursors.DictCursor)
-			cursor.execute(query, params)
-			log.debug(query)
-			return cursor.lastrowid
-		finally:
-			# Close the cursor and release worker's lock
-			if cursor is not None:
-				cursor.close()
-			if worker is not None:
-				self.pool.putWorker(worker)
+			while True:
+				worker = self.pool.getWorker()
+				if worker is None:
+					raise RuntimeError("None worker, MySQL seems to be offline.")
+				cursor = None
+				try:
+					# Create cursor, execute the query and fetch one/all result(s)
+					cursor = worker.connection.cursor(MySQLdb.cursors.DictCursor)
+					cursor.execute(query, params)
+					log.debug(query)
+					return f(cursor)
+				except MySQLdb.OperationalError as e:
+					log.error("OperationalError while executing query. Destroying connection and retrying...")
+					try:
+						cursor.close()
+					except Exception as e:
+						log.error("Could not close cursor ({})".format(e))
+					cursor = None
+					try:
+						worker.connection.close()
+					except Exception as e:
+						log.error("Could not close connection ({})".format(e))
+					del worker
+					worker = None
+					time.sleep(1)
+				finally:
+					# Close the cursor and release worker's lock
+					if cursor is not None:
+						cursor.close()
+					if worker is not None:
+						self.pool.putWorker(worker)
+		return decorator
 
-	def fetch(self, query, params=None, _all=False):
-		"""
-		Fetch a single value from db that matches given query
+	def execute(self, *args, **kwargs):
+		return self._handleReconnection(lambda cursor: cursor.lastrowid)(*args, **kwargs)
 
-		:param query: query to execute. You can bind parameters with %s
-		:param params: parameters list. First element replaces first %s and so on
-		:param _all: fetch one or all values. Used internally. Use fetchAll if you want to fetch all values
-		"""
-		if params is None:
-			params = ()
-		cursor = None
-		worker = self.pool.getWorker()
-		if worker is None:
-			return None
-		try:
-			# Create cursor, execute the query and fetch one/all result(s)
-			cursor = worker.connection.cursor(MySQLdb.cursors.DictCursor)
-			cursor.execute(query, params)
-			log.debug(query)
-			if _all:
-				return cursor.fetchall()
-			else:
-				return cursor.fetchone()
-		finally:
-			# Close the cursor and release worker's lock
-			if cursor is not None:
-				cursor.close()
-			if worker is not None:
-				self.pool.putWorker(worker)
+	def fetch(self, *args, all_=False, **kwargs):
+		return self._handleReconnection(
+			lambda cursor: cursor.fetchall() if all_ else cursor.fetchone()
+		)(*args, **kwargs)
 
-	def fetchAll(self, query, params=None):
-		"""
-		Fetch all values from db that matche given query.
-		Calls self.fetch with all = True.
-
-		:param query: query to execute. You can bind parameters with %s
-		:param params: parameters list. First element replaces first %s and so on
-		"""
-		if params is None:
-			params = ()
-		return self.fetch(query, params, True)
+	def fetchAll(self, *args, **kwargs):
+		return self.fetch(*args, all_=True, **kwargs)
