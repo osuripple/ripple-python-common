@@ -1,5 +1,8 @@
 import time
-from MySQLdb._exceptions import ProgrammingError
+try:
+	from MySQLdb._exceptions import ProgrammingError
+except ImportError:
+	from pymysql.err import ProgrammingError
 
 import objects.beatmap
 from common import generalUtils

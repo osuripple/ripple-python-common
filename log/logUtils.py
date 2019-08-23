@@ -1,6 +1,5 @@
 import logging
 
-from objects import glob
 import time
 import os
 
@@ -8,14 +7,16 @@ ENDL = "\n" if os.name == "posix" else "\r\n"
 
 
 def discord(channel, message, alertDev=False):
+	import objects.glob
+
 	if channel == "bunker":
-		glob.schiavo.sendConfidential(message, alertDev)
+		objects.glob.schiavo.sendConfidential(message, alertDev)
 	elif channel == "cm":
-		glob.schiavo.sendCM(message)
+		objects.glob.schiavo.sendCM(message)
 	elif channel == "staff":
-		glob.schiavo.sendStaff(message)
+		objects.glob.schiavo.sendStaff(message)
 	elif channel == "general":
-		glob.schiavo.sendGeneral(message)
+		objects.glob.schiavo.sendGeneral(message)
 	else:
 		raise ValueError("Unsupported channel ({})".format(channel))
 
@@ -47,7 +48,8 @@ def rap(userID, message, discordChannel=None, through="FokaBot"):
 	:return:
 	"""
 	import common.ripple
-	glob.db.execute("INSERT INTO rap_logs (id, userid, text, datetime, through) VALUES (NULL, %s, %s, %s, %s)", [userID, message, int(time.time()), through])
+	import objects.glob
+	e = objects.glob.db.execute("INSERT INTO rap_logs (id, userid, text, datetime, through) VALUES (NULL, %s, %s, %s, %s)", [userID, message, int(time.time()), through])
 	username = common.ripple.userUtils.getUsername(userID)
 	if discordChannel is not None:
 		discord(discordChannel, "{} {}".format(username, message))
