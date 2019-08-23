@@ -224,11 +224,11 @@ class db:
 		return decorator
 
 	def execute(self, *args, **kwargs):
-		return self._handleReconnection(lambda cursor: cursor.lastrowid)(*args, **kwargs)
+		return self._handleReconnection(lambda x: x.lastrowid)(*args, **kwargs)
 
 	def fetch(self, *args, all_=False, **kwargs):
 		return self._handleReconnection(
-			lambda cursor: cursor.fetchall() if all_ else cursor.fetchone()
+			lambda x: x.fetchall() if all_ else x.fetchone()
 		)(*args, **kwargs)
 
 	def fetchAll(self, *args, **kwargs):
