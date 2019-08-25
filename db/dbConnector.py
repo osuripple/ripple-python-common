@@ -23,13 +23,23 @@ class db:
 		result = None
 		lastExc = None
 		while attempts < self.maxAttempts:
-			conn = objects.glob.threadScope.db
-			cur = conn.cursor(pymysql.cursors.DictCursor)
+			# cur is needed in except (linter complains)
+			cur = None
+
+			# Calling objects.glob.threadScope.db may create a new connection
+			# and we need to except OperationalErorrs raised by it as well
 			try:
+				conn = objects.glob.threadScope.db
+				cur = conn.cursor(pymysql.cursors.DictCursor)
+
 				log.debug("{} ({})".format(query, params))
 				cur.execute(query, params)
 				if callable(cb):
 					result = cb(cur)
+
+				# Clear any exception we may have due to previously
+				# failed attempts to execute the query
+				lastExc = None
 				break
 			except pymysql.err.OperationalError as e:
 				lastExc = e
