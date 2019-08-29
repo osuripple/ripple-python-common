@@ -882,7 +882,7 @@ def logHardware(userID, hashes, activation = False):
 			log.warning("Invalid hash set ({}) for user {} in HWID check".format(hashes, userID), "bunk")
 			return False
 
-	# Run some HWID checks on that user if he is not restricted
+	# Run some HWID checks on that user if they are not restricted
 	if not isRestricted(userID):
 		# Get username
 		username = getUsername(userID)
@@ -934,13 +934,17 @@ def logHardware(userID, hashes, activation = False):
 					banned=i["username"],
 					bannedUserID=i["userid"]
 				))
-				log.warning("**{user}** ({userID}) has been restricted because he has logged in from HWID _({hwid})_ used more than 10% from banned/restricted user **{banned}** ({bannedUserID}), **possible multiaccount**.".format(
-					user=username,
-					userID=userID,
-					hwid=hashes[2:5],
-					banned=i["username"],
-					bannedUserID=i["userid"]
-				), "cm")
+				log.cm(
+					"**{user}** ({userID}) has been restricted because they have logged in from HWID "
+					"({hwid})_used more than 10% from banned/restricted user **{banned}** ({bannedUserID}), "
+					"**possible multiaccount**.".format(
+						user=username,
+						userID=userID,
+						hwid=hashes[2:5],
+						banned=i["username"],
+						bannedUserID=i["userid"]
+					)
+				)
 
 	# Update hash set occurencies
 	glob.db.execute("""
@@ -1026,19 +1030,23 @@ def verifyUser(userID, hashes):
 		restrict(originalUserID)
 
 		# Discord message
-		log.warning("User **{originalUsername}** ({originalUserID}) has been restricted because he has created multiaccount **{username}** ({userID}). The multiaccount has been banned.".format(
-			originalUsername=originalUsername,
-			originalUserID=originalUserID,
-			username=username,
-			userID=userID
-		), "cm")
+		log.cm(
+			"User **{originalUsername}** ({originalUserID}) has been restricted because "
+			"they have created multiaccount **{username}** ({userID}). "
+			"The multiaccount has been banned.".format(
+				originalUsername=originalUsername,
+				originalUserID=originalUserID,
+				username=username,
+				userID=userID
+			)
+		)
 
 		# Disallow login
 		return False
 	else:
 		# No matches found, set USER_PUBLIC and USER_NORMAL flags and reset USER_PENDING_VERIFICATION flag
 		resetPendingFlag(userID)
-		#log.info("User **{}** ({}) has verified his account with hash set _{}_".format(username, userID, hashes[2:5]), "cm")
+		#log.cm("User **{}** ({}) has verified his account with hash set _{}_".format(username, userID, hashes[2:5]))
 
 		# Allow login
 		return True

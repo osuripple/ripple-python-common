@@ -6,11 +6,11 @@ import os
 ENDL = "\n" if os.name == "posix" else "\r\n"
 
 
-def discord(channel, message, alertDev=False):
+def discord(channel, message, level=None):
 	import objects.glob
 
 	if channel == "bunker":
-		objects.glob.schiavo.sendConfidential(message, alertDev)
+		objects.glob.schiavo.sendConfidential(message)
 	elif channel == "cm":
 		objects.glob.schiavo.sendCM(message)
 	elif channel == "staff":
@@ -19,6 +19,20 @@ def discord(channel, message, alertDev=False):
 		objects.glob.schiavo.sendGeneral(message)
 	else:
 		raise ValueError("Unsupported channel ({})".format(channel))
+
+	# Log with stdlib logging
+	if level is not None:
+		LEVELS_MAPPING.get(level.lower(), info)(message)
+
+
+def cm(message):
+	"""
+	CM logging (to discord and with logging)
+
+	:param message: the message to log
+	:return:
+	"""
+	return discord("cm", message, level="warning")
 
 
 def warning(message):
@@ -49,7 +63,13 @@ def rap(userID, message, discordChannel=None, through="FokaBot"):
 	"""
 	import common.ripple
 	import objects.glob
-	e = objects.glob.db.execute("INSERT INTO rap_logs (id, userid, text, datetime, through) VALUES (NULL, %s, %s, %s, %s)", [userID, message, int(time.time()), through])
+	objects.glob.db.execute("INSERT INTO rap_logs (id, userid, text, datetime, through) VALUES (NULL, %s, %s, %s, %s)", [userID, message, int(time.time()), through])
 	username = common.ripple.userUtils.getUsername(userID)
 	if discordChannel is not None:
 		discord(discordChannel, "{} {}".format(username, message))
+
+LEVELS_MAPPING = {
+	"warning": warning,
+	"info": info,
+	"error": error
+}

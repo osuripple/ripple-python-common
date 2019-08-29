@@ -1,47 +1,83 @@
-import pymysql
-import pymysqlpool
+import threading
+import time
 
+import pymysql
+import pymysql.err
+
+import objects.glob
 import common.log.logUtils as log
 
 
 class db:
-	def __init__(self, size=8, **kwargs):
-		self.timeout = 10
-		self.retry_num = 10
-		self.pool = pymysqlpool.ConnectionPool(size=size, **kwargs)
+	def __init__(self, **kwargs):
+		self.connectionKwargs = kwargs
+		self.maxAttempts = 30
 
-	def _get_connection(self):
-		return self.pool.get_connection(timeout=self.timeout, retry_num=self.retry_num)
+	def connectionFactory(self):
+		return pymysql.connect(**self.connectionKwargs)
+
+	def _execute(self, query, params=None, cb=None):
+		if params is None:
+			params = ()
+		attempts = 0
+		result = None
+		lastExc = None
+		while attempts < self.maxAttempts:
+			# cur is needed in except (linter complains)
+			cur = None
+
+			# Calling objects.glob.threadScope.db may create a new connection
+			# and we need to except OperationalErorrs raised by it as well
+			try:
+				conn = objects.glob.threadScope.db
+				cur = conn.cursor(pymysql.cursors.DictCursor)
+
+				log.debug("{} ({})".format(query, params))
+				cur.execute(query, params)
+				if callable(cb):
+					result = cb(cur)
+
+				# Clear any exception we may have due to previously
+				# failed attempts to execute the query
+				lastExc = None
+				break
+			except pymysql.err.OperationalError as e:
+				lastExc = e
+				log.error(
+					"MySQL operational error on Thread {} ({}). Trying to recover".format(
+						threading.get_ident(),
+						e
+					)
+				)
+
+				# Close cursor now
+				try:
+					cur.close()
+				except:
+					pass
+
+				# Sleep if necessary
+				if attempts > 0:
+					time.sleep(1)
+
+				# Reset connection (this closes the connection as well)
+				objects.glob.threadScope.dbClose()
+				attempts += 1
+			finally:
+				# Try to close the cursor (will except if there was a failure)
+				try:
+					cur.close()
+				except:
+					pass
+		if lastExc is not None:
+			raise lastExc
+		return result
 
 	def execute(self, query, params=None):
-		if params is None:
-			params = ()
-		conn = self._get_connection()
-		with conn:
-			cur = conn.cursor(pymysql.cursors.DictCursor)
-			r = None
-			try:
-				log.debug("{} ({})".format(query, params))
-				cur.execute(query, params)
-				r = cur.lastrowid
-			finally:
-				cur.close()
-				return r
+		return self._execute(query=query, params=params, cb=lambda x: x.lastrowid)
 
-	def fetch(self, query, params=None, all_=False):
-		if params is None:
-			params = ()
-		conn = self._get_connection()
-		with conn:
-			cur = conn.cursor(pymysql.cursors.DictCursor)
-			r = None
-			try:
-				log.debug("{} ({})".format(query, params))
-				cur.execute(query, params)
-				r = cur.fetchall() if all_ else cur.fetchone()
-			finally:
-				cur.close()
-				return r
+	def fetch(self, query, params=None):
+		return self._execute(query=query, params=params, cb=lambda x: x.fetchone())
 
 	def fetchAll(self, query, params=None):
-		return self.fetch(query=query, params=params, all_=True)
+		return self._execute(query=query, params=params, cb=lambda x: x.fetchall())
