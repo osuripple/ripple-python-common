@@ -41,19 +41,17 @@ class asyncRequestHandler(SentryMixin, tornado.web.RequestHandler):
 		self.send_error(405)
 
 	def getRequestIP(self):
-		"""
-		Return CF-Connecting-IP (request IP when under cloudflare, you have to configure nginx to enable that)
-		If that fails, return X-Forwarded-For (request IP when not under Cloudflare)
-		if everything else fails, return remote IP
-
-		:return: Client IP address
-		"""
-		if "CF-Connecting-IP" in self.request.headers:
-			return self.request.headers.get("CF-Connecting-IP")
-		elif "X-Forwarded-For" in self.request.headers:
-			return self.request.headers.get("X-Forwarded-For")
-		else:
-			return self.request.remote_ip
+		real_ip = self.request.headers.get("X-Real-IP", None)
+		if real_ip is not None:
+			real_ip = real_ip.strip()
+			if real_ip:
+				return real_ip
+		forwarded_for = self.request.headers.get("X-Forwarded-For", None)
+		if forwarded_for is not None:
+			forwarded_for = [x.strip() for x in forwarded_for.split(",")]
+			if forwarded_for and forwarded_for[-1]:
+				return forwarded_for[-1]
+		return self.request.remote_ip
 
 
 def runBackground(data, callback):
