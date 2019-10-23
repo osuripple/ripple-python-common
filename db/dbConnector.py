@@ -41,10 +41,10 @@ class db:
 				# failed attempts to execute the query
 				lastExc = None
 				break
-			except pymysql.err.OperationalError as e:
+			except (pymysql.err.OperationalError, pymysql.err.InternalError) as e:
 				lastExc = e
 				log.error(
-					"MySQL operational error on Thread {} ({}). Trying to recover".format(
+					"MySQL operational/internal error on Thread {} ({}). Trying to recover".format(
 						threading.get_ident(),
 						e
 					)
