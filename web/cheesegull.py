@@ -110,19 +110,23 @@ def toDirect(data):
 		raise ValueError("`data` doesn't contain a valid cheesegull response")
 	s = "{SetID}.osz|{Artist}|{Title}|{Creator}|{RankedStatus}|0.00|{LastUpdate}|{SetID}|" \
 		"{SetID}|{HasVideoInt}|0|1337|{FileSizeNoVideo}|".format(
-		**data,
-		**{
-			"HasVideoInt": int(data["HasVideo"]),
-			"FileSizeNoVideo": "7331" if data["HasVideo"] else ""
-		}
-	)
+			**{k: v.replace("|", "-") if type(v) is str else v for k, v in data.items()},
+			**{
+				"HasVideoInt": int(data["HasVideo"]),
+				"FileSizeNoVideo": "7331" if data["HasVideo"] else ""
+			}
+		)
 	if len(data["ChildrenBeatmaps"]) > 0:
 		for i in data["ChildrenBeatmaps"]:
-			s += "{DiffNameSanitized} ({DifficultyRating:.2f}★~{BPM}♫~AR{AR}~OD{OD}~CS{CS}~HP{HP}~{ReadableLength})" \
-				 "@{Mode},".format(**i, **{
-				"DiffNameSanitized": i["DiffName"].replace("@", ""),
-				"ReadableLength": "{}m{}s".format(i["TotalLength"] // 60, i["TotalLength"] % 60)
-			})
+			s += \
+				"{DiffNameSanitized} ({DifficultyRating:.2f}★~{BPM}♫~AR{AR}~OD{OD}~CS{CS}~HP{HP}~{ReadableLength})" \
+				 "@{Mode},".format(
+					**i,
+					**{
+						"DiffNameSanitized": i["DiffName"].replace("@", "").replace("|", "-"),
+						"ReadableLength": "{}m{}s".format(i["TotalLength"] // 60, i["TotalLength"] % 60)
+					}
+				)
 	s = s.strip(",")
 	s += "|"
 	return s
