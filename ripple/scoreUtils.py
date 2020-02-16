@@ -9,7 +9,8 @@ def isRankable(m):
 	:return: True if there are no unranked mods in `m`, else False
 	"""
 	# TODO: Check other modes unranked mods ...?
-	return not ((m & mods.RELAX > 0) or (m & mods.RELAX2 > 0) or (m & mods.AUTOPLAY > 0) or (m & mods.SCOREV2 > 0))
+	# return not ((m & mods.RELAX > 0) or (m & mods.RELAX2 > 0) or (m & mods.AUTOPLAY > 0) or (m & mods.SCOREV2 > 0))
+	return m & (mods.AUTOPLAY | mods.SCOREV2) == 0
 
 def readableGameMode(gameMode):
 	"""
