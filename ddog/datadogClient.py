@@ -1,6 +1,5 @@
 import threading
 import datadog
-from objects import glob
 
 class periodicCheck:
 	def __init__(self, name, checkFunction):
@@ -10,6 +9,7 @@ class periodicCheck:
 		:param name: Datadog stat name, without prefix
 		:param checkFunction: Function that returns the data to report. Eg: `lambda: len(something)`
 		"""
+		from objects import glob
 		self.name = glob.DATADOG_PREFIX+"."+name
 		self.checkFunction = checkFunction
 
