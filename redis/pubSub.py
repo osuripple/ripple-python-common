@@ -32,7 +32,7 @@ class listener(threading.Thread):
 		for k, v in self.handlers.items():
 			channels.append(k)
 		self.pubSub.subscribe(channels)
-		log.info("Subscribed to redis pubsub channels: {}".format(channels))
+		log.debug("Subscribed to redis pubsub channels: {}".format(channels))
 
 	@sentry.capture()
 	def processItem(self, item):
