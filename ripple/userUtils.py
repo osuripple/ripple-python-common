@@ -1,3 +1,4 @@
+import json
 import time
 try:
 	from pymysql.err import ProgrammingError
@@ -1277,3 +1278,19 @@ def updateTotalHits(userID=0, gameMode=gameModes.STD, newHits=0, score=None, *, 
 
 def isRelaxLeaderboard(userID):
 	return bool(glob.db.fetch("SELECT is_relax AS x FROM users WHERE id = %s LIMIT 1", (userID,))["x"])
+
+
+def _get_pref(userID, column):
+	return glob.db.fetch(f"SELECT {column} AS x FROM users_preferences WHERE id = %s LIMIT 1", (userID,))["x"]
+
+
+def getDisplayMode(userID, relax):
+	return _get_pref(userID, "scoreboard_display_relax" if relax else "scoreboard_display_classic")
+
+
+def getAutoLast(userID, relax):
+	return _get_pref(userID, "auto_last_relax" if relax else "auto_last_classic")
+
+
+def getScoreOverwrite(userID, gameMode):
+	return _get_pref(userID, f"score_overwrite_{gameModes.getGameModeForDB(gameMode)}")
