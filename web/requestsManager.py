@@ -1,5 +1,4 @@
-import sys
-import traceback
+import contextlib
 
 import tornado
 import tornado.web
@@ -9,6 +8,7 @@ from objects import glob
 from common.log import logUtils as log
 from raven.contrib.tornado import SentryMixin
 
+
 class asyncRequestHandler(SentryMixin, tornado.web.RequestHandler):
 	"""
 	Tornado asynchronous request handler
@@ -16,23 +16,40 @@ class asyncRequestHandler(SentryMixin, tornado.web.RequestHandler):
 	use asyncGet() and asyncPost() instead of get() and post().
 	Done. I'm not kidding.
 	"""
+	MODULE_NAME = None
+
+	@property
+	def hasStats(self):
+		return self.MODULE_NAME is not None
+
+	def __init__(self, *args, **kwargs):
+		super(asyncRequestHandler, self).__init__(*args, **kwargs)
+		self._getLatencyStat = glob.stats["request_latency_seconds"].labels(method="get", endpoint=self.MODULE_NAME)
+		self._postLatencyStat = glob.stats["request_latency_seconds"].labels(method="post", endpoint=self.MODULE_NAME)
+		self._getInProgress = glob.stats["in_progress_requests"].labels(method="get", endpoint=self.MODULE_NAME)
+		self._postInProgress = glob.stats["in_progress_requests"].labels(method="post", endpoint=self.MODULE_NAME)
+
 	@tornado.web.asynchronous
 	@tornado.gen.engine
 	def get(self, *args, **kwargs):
-		try:
-			yield tornado.gen.Task(runBackground, (self.asyncGet, tuple(args), dict(kwargs)))
-		finally:
-			if not self._finished:
-				self.finish()
+		with self._getLatencyStat.time() if self.hasStats else contextlib.suppress():
+			with self._getInProgress.track_inprogress() if self.hasStats else contextlib.suppress():
+				try:
+					yield tornado.gen.Task(runBackground, (self.asyncGet, tuple(args), dict(kwargs)))
+				finally:
+					if not self._finished:
+						self.finish()
 
 	@tornado.web.asynchronous
 	@tornado.gen.engine
 	def post(self, *args, **kwargs):
-		try:
-			yield tornado.gen.Task(runBackground, (self.asyncPost, tuple(args), dict(kwargs)))
-		finally:
-			if not self._finished:
-				self.finish()
+		with self._postLatencyStat.time() if self.hasStats else contextlib.suppress():
+			with self._postInProgress.track_inprogress() if self.hasStats else contextlib.suppress():
+				try:
+					yield tornado.gen.Task(runBackground, (self.asyncPost, tuple(args), dict(kwargs)))
+				finally:
+					if not self._finished:
+						self.finish()
 
 	def asyncGet(self, *args, **kwargs):
 		self.send_error(405)
